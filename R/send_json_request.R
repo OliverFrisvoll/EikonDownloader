@@ -10,24 +10,16 @@
 #' @export
 send_json_request <- function(directions, payload, debug = FALSE) {
 
-    # Checks if API key is supplied
-    if (is.null(ek_profile$api_key)) {
-        cli::cli_abort(c(
-          "Cannot find: ek_profile",
-          "x" = "No api_key supplied",
-          "i" = "Do ek_profile$api_key <- <api_key> to set api_key"
-        ))
-    }
 
     # Combining the directions and payload into one list of lists
     json <- list('Entity' = list('E' = directions, 'W' = payload))
 
     # Sends a query and sets up a pointer to the location
     query <- httr::POST(
-      ek_profile$url,
+      ek_get_url(),
       httr::add_headers(
         'Content-Type' = 'application/json',
-        'x-tr-applicationid' = ek_profile$api_key
+        'x-tr-applicationid' = ek_get_APIKEY()
       ),
       body = json,
       encode = "json"

@@ -6,7 +6,7 @@
 check_if_date <- function(date) {
 
     # Check if date, tries to parse as date yyyy-mm-dd if not
-    if (!is.Date(date)) {
+    if (!lubridate::is.Date(date)) {
         date <- tryCatch({
             lubridate::ymd(date)
 
@@ -117,7 +117,7 @@ seq_of_dates <- function(start, end, interval, RFE) {
 #' Just a simple function for calculating returns.
 #'
 #' @param prices - Vector with prices
-#' @param type - Type of return ["simple" / "log"]
+#' @param type - Type of return (simple / log)
 #'
 #' @return Vector of returns
 calculate_returns <- function(prices, type = "simple") {

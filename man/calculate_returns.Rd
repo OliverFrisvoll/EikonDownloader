@@ -12,7 +12,7 @@ calculate_returns(prices, type = "simple")
 }}
 
 \item{type}{\itemize{
-\item Type of return \link{"simple" / "log"}
+\item Type of return (simple / log)
 }}
 }
 \value{

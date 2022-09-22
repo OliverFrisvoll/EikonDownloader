@@ -14,7 +14,11 @@ ts_payload_loop <- function(directions, rics, fields, interval, start, end) {
     send_json_request(directions, payload)$timeseriesData
 }
 
-# TODO: WRITE DESCRIPTION
+
+#' Converts a listed JSON like object to a dataframe
+#'
+#' @param snippet - A snippet of the JSON
+#' @return data.frame
 to_dataframe <- function(snippet) {
     # Fetches the column names that should be used for the dataframe
     column_names <- purrr::map_chr(snippet$fields, ~.$name)
@@ -23,8 +27,8 @@ to_dataframe <- function(snippet) {
     dataframe_parse <- function(dataPoints) {
 
         # Changes null values to NA
-        purrr::map(dataPoints, ~ifelse(is.null(.), NA, .)) %>%
-          as.data.frame(., col.names = column_names)
+        purrr::map(dataPoints, ~ifelse(is.null(.), NA, .)) |>
+          as.data.frame(col.names = column_names)
 
     }
 
@@ -47,8 +51,7 @@ to_dataframe <- function(snippet) {
 #' @param fields - Fields to return
 #' @param startdate - Start date of the query
 #' @param enddate - End date of the query
-#' @param interval - string, interval of data, valid values: [tick tas taq tastaq minute hour session daily weekly
-#' monthly quarterly yearly]
+#' @param interval - string, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
 #'
 #' @return A dataframe with the data requested
 #'
