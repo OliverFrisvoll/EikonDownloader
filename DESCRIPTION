@@ -1,0 +1,21 @@
+Package: EikonDownloader
+Title: Eikon API Downloader
+Version: 0.0.0.1000
+Authors@R: 
+    person("Oliver Collargol", "Frisvoll", , "ocfris97@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: This package aims to give the user the ability to download the data they require from the Eikon API.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
+Imports:
+    dplyr,
+    cli,
+    httr,
+    rlang,
+    lubridate,
+    purrr
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
