@@ -8,5 +8,4 @@
       api_url = '/api/v1/data',
       api_key = NULL
     )
-    class(.pkgglobalenv$ek) <- "Eikon_Profile"
 }

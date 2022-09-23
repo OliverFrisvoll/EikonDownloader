@@ -8,7 +8,7 @@ ek_set_APIKEY <- function(api_key) {
     if (!is.character(api_key) && !is.null(api_key)) {
         cli::cli_abort(c(
           "TypeError",
-          "x" = "The key supplied: {api_key} best be a string or NULL"
+          "x" = "The key supplied: {api_key} is not a string or NULL"
         ))
     }
 

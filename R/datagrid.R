@@ -13,6 +13,24 @@
 #' @export
 get_datagrid <- function(instrument, fields) {
 
+    # Typecheck
+    if (!is.character(instrument) && !is.character(fields)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "Neither instrument nor fields are of type char"
+        ))
+    } else if (!is.character(instrument)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "instrument is not of type char"
+        ))
+    } else if (!is.character(fields)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "fields is not of type char"
+        ))
+    }
+
     # Converts vector to list
     instrument <- as.list(instrument)
 
@@ -36,10 +54,46 @@ get_datagrid <- function(instrument, fields) {
     # Sends the direction and payload, returns the results
     results <- send_json_request(directions, payload)
 
-    # Fetches column_names from the resulting query
-    column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
+    if ("error" %in% names(results$responses[[1]])) {
+        # TODO: Add a handler for error code 416: Unable to collect data for the field 'TR.RICCode' and some specific
+        #  identifier(s)
 
-    # Creates a dataframe out of the results with the column_names found in the previous step.
-    purrr::map_dfr(results$responses[[1]]$data, ~as.data.frame(., col.names = column_names))
+        error <- results$responses[[1]]$error[[1]]
 
+        if (error$code == 218) {
+
+            cli::cli_abort(c(
+              "No Results",
+              "x" = "The field could not be found"
+            ))
+
+        }
+
+    }
+
+    data <- results$responses[[1]]$data
+
+    null_results <- purrr::imap_int(data, ~ifelse(!is.null(.x[[2]]), NA, .y))
+
+    null_results <- null_results[!is.na(null_results)]
+    if (length(null_results > 0)) {
+
+        data <- data[-null_results]
+
+    }
+
+    if (length(data) < 0) {
+
+        cli::cli_warn(c(
+          "No Results",
+          "x" = "Your query with instruments: {instument[1]}... for fields: {fields[1]}... did not return anything",
+          "i" = "Maybe check the spelling?"
+        ))
+
+    } else {
+
+        column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
+        purrr::map_dfr(data, ~as.data.frame(., col.names = column_names))
+
+    }
 }

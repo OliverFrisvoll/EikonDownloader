@@ -19,12 +19,6 @@ check_if_date <- function(date) {
               ))
           }
         )
-
-        cli::cli_inform(c(
-          "Parsing {date} as Date",
-          "v" = "Date parsed success"
-        ))
-
     }
 
     return(date)

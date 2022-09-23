@@ -1,6 +1,6 @@
-#' Send JSON request to the database
+#' Send JSON request to the Eikon API
 #'
-#' Sends a post request to the API with the given payload and a direction
+#' Sends a POST request to the API with the given payload and a direction
 #'
 #' @param directions - The location to send it
 #' @param payload - What you are looking for formatted in a specific way
