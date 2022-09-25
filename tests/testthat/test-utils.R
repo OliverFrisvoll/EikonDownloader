@@ -26,7 +26,15 @@ test_that("seq_of_dates", {
       start = c(lubridate::ymd("2020-01-01"), lubridate::ymd("2020-01-25")),
       end = c(lubridate::ymd("2020-01-26"), lubridate::ymd("2020-02-01"))
     ))
-    expect_error(seq_of_dates(lubridate::ymd("2020-05-01"), lubridate::ymd("2020-02-01"), "hour", 100))
-    expect_warning(seq_of_dates(lubridate::ymd("2020-01-01"), lubridate::ymd("2020-03-01"), "hour", 3001))
+    expect_error(seq_of_dates(lubridate::ymd("2020-05-01"), lubridate::ymd("2020-02-01"), "hour", 100), "Date Error")
+    expect_warning(seq_of_dates(lubridate::ymd("2020-01-01"), lubridate::ymd("2020-03-01"), "hour", 3001), "Too many rows")
 
 })
+
+# test_that("calculate_returns()", {
+#     prices <- c(10, 12, 14, 16, 20)
+#     simple_answer <- c(NA, 0.1823, 0.1542, 0.1335, 0.2231)
+#     log_answer <- c(NA, 0.1823, 0.1542, 0.1335, 0.2231)
+#     print(calculate_returns(prices, "log"))
+#
+# })

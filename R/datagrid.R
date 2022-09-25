@@ -42,17 +42,13 @@ get_datagrid <- function(instrument, fields) {
       'requests' = list(
         list(
           'instruments' = instrument,
-          'fields' = list(
-            list(
-              'name' = fields
-            )
-          )
+          'fields' = lapply(fields, \(x) list("name" = x))
         )
       )
     )
 
     # Sends the direction and payload, returns the results
-    results <- send_json_request(directions, payload)
+    results <<- send_json_request(directions, payload)
 
     if ("error" %in% names(results$responses[[1]])) {
         # TODO: Add a handler for error code 416: Unable to collect data for the field 'TR.RICCode' and some specific
@@ -84,6 +80,7 @@ get_datagrid <- function(instrument, fields) {
 
     if (length(data) < 0) {
 
+        # TODO: Create test
         cli::cli_warn(c(
           "No Results",
           "x" = "Your query with instruments: {instument[1]}... for fields: {fields[1]}... did not return anything",

@@ -29,6 +29,8 @@ ek_set_APIKEY <- function(api_key) {
 #' Fetches the Eikon API_KEY
 ek_get_APIKEY <- function() {
     if (is.null(.pkgglobalenv$ek$api_key)) {
+
+        # TODO: Create test
         cli::cli_abort(c(
           "Missing API_KEY",
           "x" = "API_KEY not set",
@@ -41,7 +43,6 @@ ek_get_APIKEY <- function() {
 
 
 #' Fetches the url to send requests to
-#' @export
 ek_get_url <- function() {
     paste0(
       .pkgglobalenv$ek$base_url,

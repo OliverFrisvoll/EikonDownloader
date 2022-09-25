@@ -1,4 +1,3 @@
-# TODO: WRITE DESCRIPTION
 ts_payload_loop <- function(directions, rics, fields, interval, start, end) {
 
     # Builds the payload to be sent
@@ -51,7 +50,7 @@ to_dataframe <- function(snippet) {
 #' @param fields - Fields to return
 #' @param startdate - Start date of the query
 #' @param enddate - End date of the query
-#' @param interval - string, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
+#' @param interval - char, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
 #'
 #' @return A dataframe with the data requested
 #'

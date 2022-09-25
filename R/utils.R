@@ -5,6 +5,7 @@
 #' @return a date object.
 check_if_date <- function(date) {
 
+    # TODO: Add Date-Time if possible
     # Check if date, tries to parse as date yyyy-mm-dd if not
     if (!lubridate::is.Date(date)) {
         date <- tryCatch({
@@ -68,7 +69,7 @@ seq_of_dates <- function(start, end, interval, RFE) {
         ))
     }
 
-
+    # TODO: Find a better solution
     interval_object <- switch(
       interval,
       minute = lubridate::make_difftime(minute = RFE),
@@ -116,6 +117,7 @@ seq_of_dates <- function(start, end, interval, RFE) {
 #' @return Vector of returns
 calculate_returns <- function(prices, type = "simple") {
 
+    # TODO: Write tests
     # Changing type to lowercase
     type <- tolower(type)
 

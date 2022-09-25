@@ -15,6 +15,8 @@ test_that("get_datagrid(), returns values for a correct Instrument and field", {
     )
 
     expect_equal(get_datagrid(c('88160R101', '594918104'), 'TR.RICCode'), RIC_TSLA_MSFT)
+
+    rm(RIC_TSLA_MSFT)
     ek_set_APIKEY(NULL)
 })
 
@@ -29,15 +31,33 @@ test_that("get_datagrid(), returns values for when one Instrument is faulty and 
     )
 
     expect_equal(get_datagrid(c('88160R101', '5949182324104'), 'TR.RICCode'), RIC_TSLA)
+
+    rm(RIC_TSLA)
     ek_set_APIKEY(NULL)
 })
 
 
-test_that("get_datagrid(), returns no rows, only the column names when the field is faulty", {
+test_that("get_datagrid(), if supplied a faulty field, returns an error", {
     skip_on_cran()
     ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
 
     expect_error(get_datagrid(c('88160R101', '594918104'), 'TR.sds'), "No Results")
+    ek_set_APIKEY(NULL)
+})
+
+test_that("get_datagrid(), returns multiple rows for multiple fields", {
+    skip_on_cran()
+    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+
+    LOT_IPO <- data.frame(
+      Instrument = c("AAPL.O", "TSLA.O"),
+      CF_LOTSIZE = c(100, 100),
+      IPO.Date = c("1980-12-12", "2010-06-09")
+    )
+
+    expect_equal(get_datagrid(c('AAPL.O', 'TSLA.O'), c('CF_LOTSIZE', 'TR.IPODate')), LOT_IPO)
+
+    rm(LOT_IPO)
     ek_set_APIKEY(NULL)
 })
 
