@@ -51,16 +51,6 @@ to_dataframe <- function(snippet) {
 #'
 #' @return A dataframe with the data requested
 #'
-#' @examplesIf !is.null(.pkgglobalenv$ek$api_key)
-#' # The hourly data for APPLE between 2022-01-05 and 2022-01-06
-#' df <- get_timeseries("AAPL.O", startdate = as.Date("2022-01-05"), enddate = as.Date("2022-01-06"), interval = "hour")
-#' head(df)
-#'
-#' # The daily data for APPLE and TESLA between 2021-03-01 and 2021-03-10
-#' df <- get_timeseries(rics = c("AAPL.O", "TSLA.O"), startdate = as.Date("2021-03-01"), enddate = as.Date
-#' ("2021-03-10"))
-#' head(df)
-#'
 #' @export
 get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'daily') {
 
@@ -77,7 +67,7 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
           "x" = "fields is not of type char"
         ))
     }
-    if (!is.Date(startdate) || !is.Date(enddate)) {
+    if (!lubridate::is.Date(startdate) || !lubridate::is.Date(enddate)) {
         cli::cli_abort(c(
           "ValueError",
           "x" = "date is not of type Date"

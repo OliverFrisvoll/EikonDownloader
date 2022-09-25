@@ -57,7 +57,7 @@ Examples of how to fetch data from the datagrid using CUSIP id's
 
 CUSIPS <- c('88160R101', '594918104')
 
-# Downloading the data
+# Creating a df from downloaded data.
 df <- get_datagrid(
   instrument = CUSIPS,
   fields = c('TR.RICCode', 'TR.Revenue', 'TR.IPODate')

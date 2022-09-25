@@ -8,7 +8,7 @@ get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
 }
 \arguments{
 \item{rics}{\itemize{
-\item Vector of rics for the information requested
+\item Char vector of rics for the information requested
 }}
 
 \item{fields}{\itemize{
@@ -32,15 +32,5 @@ A dataframe with the data requested
 }
 \description{
 Returns a timeseries of data for the given rics for the given timeperiod and interval.
-The fields can be spesified, by default it returns all the fields
-}
-\examples{
-# The hourly data for APPLE between 2022-01-05 and 2022-01-06
-df <- get_timeseries("AAPL.O", startdate = as.Date("2022-01-05"), enddate = as.Date("2022-01-06"), interval = "hour")
-head(df)
-
-# The daily data for APPLE and TESLA between 2021-03-01 and 2021-03-10
-df <- get_timeseries(rics = c("AAPL.O", "TSLA.O"), startdate = as.Date("2021-03-01"), enddate = as.Date("2021-03-10"))
-head(df)
-
+The fields can be specified, by default it returns all the fields
 }
