@@ -7,6 +7,7 @@ test_that("get_datagrid(), does not accept non char values", {
 
 test_that("get_datagrid(), returns values for a correct Instrument and field", {
     skip_on_cran()
+    skip_on_ci()
     ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
 
     RIC_TSLA_MSFT <- data.frame(
@@ -23,6 +24,7 @@ test_that("get_datagrid(), returns values for a correct Instrument and field", {
 
 test_that("get_datagrid(), returns values for when one Instrument is faulty and field is correct", {
     skip_on_cran()
+    skip_on_ci()
     ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
 
     RIC_TSLA <- data.frame(
@@ -39,6 +41,7 @@ test_that("get_datagrid(), returns values for when one Instrument is faulty and 
 
 test_that("get_datagrid(), if supplied a faulty field, returns an error", {
     skip_on_cran()
+    skip_on_ci()
     ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
 
     expect_error(get_datagrid(c('88160R101', '594918104'), 'TR.sds'), "No Results")
@@ -47,6 +50,7 @@ test_that("get_datagrid(), if supplied a faulty field, returns an error", {
 
 test_that("get_datagrid(), returns multiple rows for multiple fields", {
     skip_on_cran()
+    skip_on_ci()
     ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
 
     LOT_IPO <- data.frame(
