@@ -13,7 +13,6 @@ Imports:
     dplyr,
     cli,
     httr,
-    rlang,
     lubridate,
     purrr
 Suggests: 

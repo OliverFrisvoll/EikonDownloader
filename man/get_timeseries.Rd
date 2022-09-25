@@ -24,7 +24,7 @@ get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
 }}
 
 \item{interval}{\itemize{
-\item string, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
+\item char, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
 }}
 }
 \value{

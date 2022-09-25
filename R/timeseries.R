@@ -31,14 +31,10 @@ to_dataframe <- function(snippet) {
 
     }
 
-    # Changes the timestamp to date object and adds the ric code as a variable
-    purrr::map_dfr(snippet$dataPoints, dataframe_parse) |>
-      dplyr::mutate(
-        TIMESTAMP = lubridate::parse_date_time(TIMESTAMP, orders = "Ymd HMS"),
-        RIC.Code = snippet$ric
-      ) |>
-      dplyr::arrange(TIMESTAMP, RIC.Code)
+    results <- purrr::map_dfr(snippet$dataPoints, dataframe_parse)
+    results$RIC.Code <- snippet$ric
 
+    results
 }
 
 
