@@ -1,32 +1,3 @@
-#' Checks if supplied object is a date object
-#'
-#' Tries to parse is as a date if not
-#' @param date - Object to check if is date
-#' @return a date object.
-check_if_date <- function(date) {
-
-    # TODO: Add Date-Time if possible
-    # Check if date, tries to parse as date yyyy-mm-dd if not
-    if (!lubridate::is.Date(date)) {
-        date <- tryCatch({
-            lubridate::ymd(date)
-
-        },
-          warning = function(cond) {
-              cli::cli_abort(c(
-                "TypeError",
-                "x" = "Could not parse as date using ymd()",
-                "i" = "Try converting: {date}, to date manually"
-              ))
-          }
-        )
-    }
-
-    return(date)
-
-}
-
-
 # TODO: WRITE DESCRIPTION
 date_to_JSON <- function(date) {
     # "converts" to JSON format
@@ -49,8 +20,7 @@ seq_of_dates <- function(start, end, interval, RFE) {
 
     # Type checking
     interval <- tolower(interval)
-    start <- check_if_date(start)
-    end <- check_if_date(end)
+
 
     if (RFE >= 3000) {
         cli::cli_warn(c(

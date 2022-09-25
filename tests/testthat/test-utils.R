@@ -1,11 +1,3 @@
-test_that("check_if_date", {
-    expect_equal(check_if_date("2010-10-01"), lubridate::ymd("2010-10-01"))
-    expect_equal(check_if_date(lubridate::ymd("2010-10-01")), lubridate::ymd("2010-10-01"))
-    expect_error(check_if_date("2010-1000-10"))
-    # expect_equal(check_if_date())
-})
-
-
 test_that("date_to_JSON", {
     expect_equal(date_to_JSON(lubridate::ymd("2001-01-01")), "2001-01-01T00:00:00Z")
     expect_equal(date_to_JSON(lubridate::parse_date_time("2001-01-01 20:10:10", "Ymd HMS")), "2001-01-01T20:10:10Z")

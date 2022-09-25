@@ -30,7 +30,6 @@ ek_set_APIKEY <- function(api_key) {
 ek_get_APIKEY <- function() {
     if (is.null(.pkgglobalenv$ek$api_key)) {
 
-        # TODO: Create test
         cli::cli_abort(c(
           "Missing API_KEY",
           "x" = "API_KEY not set",

@@ -38,20 +38,57 @@ to_dataframe <- function(snippet) {
 }
 
 
-#' Fetch timeseries of data
+#' Get timeseries data from Eikon using RIC as identifier
 #'
-#' Returns a timeseries of data based upon the variables given
+#' Returns a timeseries of data for the given rics for the given timeperiod and interval.
+#' The fields can be specified, by default it returns all the fields
 #'
-#' @param rics - Vector of rics for the information requested
-#' @param fields - Fields to return
-#' @param startdate - Start date of the query
-#' @param enddate - End date of the query
+#' @param rics - Char vector of rics for the information requested
+#' @param fields - Fields to return, can be found on the Refinitiv Workspace
+#' @param startdate - Date, start date of the query
+#' @param enddate - Date, end date of the query
 #' @param interval - char, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
 #'
 #' @return A dataframe with the data requested
 #'
+#' @examplesIf !is.null(.pkgglobalenv$ek$api_key)
+#' # The hourly data for APPLE between 2022-01-05 and 2022-01-06
+#' df <- get_timeseries("AAPL.O", startdate = as.Date("2022-01-05"), enddate = as.Date("2022-01-06"), interval = "hour")
+#' head(df)
+#'
+#' # The daily data for APPLE and TESLA between 2021-03-01 and 2021-03-10
+#' df <- get_timeseries(rics = c("AAPL.O", "TSLA.O"), startdate = as.Date("2021-03-01"), enddate = as.Date
+#' ("2021-03-10"))
+#' head(df)
+#'
 #' @export
 get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'daily') {
+
+    # Type checks
+    if (!is.character(rics)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "rics is not of type char"
+        ))
+    }
+    if (!is.character(fields)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "fields is not of type char"
+        ))
+    }
+    if (!is.Date(startdate) || !is.Date(enddate)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "date is not of type Date"
+        ))
+    }
+    if (!is.character(interval)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "interval is not of type char"
+        ))
+    }
 
     # Changing interval to lowercase
     interval <- tolower(interval)
@@ -63,15 +100,10 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
     rics <- as.list(rics)
     fields <- as.list(fields)
 
-    # Checks if date is dateformat
-    startdate <- check_if_date(startdate)
-    enddate <- check_if_date(enddate)
-
-
     date_list <- seq_of_dates(startdate, enddate, interval, MAX_ROWS / length(rics))
 
-
     # Sends the requests divided into multiple requests that adhere to the 3000 rows limit imposed
+    # TODO: Change this so that there is a payload packer that creates a lists of payloads and then sends the queries
     results <- purrr::pmap(
       date_list,
       ~ts_payload_loop(

@@ -2,7 +2,7 @@
 % Please edit documentation in R/timeseries.R
 \name{get_timeseries}
 \alias{get_timeseries}
-\title{Fetch timeseries of data}
+\title{Get timeseries data from Eikon using RIC as identifier}
 \usage{
 get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
 }
@@ -12,15 +12,15 @@ get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
 }}
 
 \item{fields}{\itemize{
-\item Fields to return
+\item Fields to return, can be found on the Refinitiv Workspace
 }}
 
 \item{startdate}{\itemize{
-\item Start date of the query
+\item Date, start date of the query
 }}
 
 \item{enddate}{\itemize{
-\item End date of the query
+\item Date, end date of the query
 }}
 
 \item{interval}{\itemize{
@@ -31,5 +31,16 @@ get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
 A dataframe with the data requested
 }
 \description{
-Returns a timeseries of data based upon the variables given
+Returns a timeseries of data for the given rics for the given timeperiod and interval.
+The fields can be spesified, by default it returns all the fields
+}
+\examples{
+# The hourly data for APPLE between 2022-01-05 and 2022-01-06
+df <- get_timeseries("AAPL.O", startdate = as.Date("2022-01-05"), enddate = as.Date("2022-01-06"), interval = "hour")
+head(df)
+
+# The daily data for APPLE and TESLA between 2021-03-01 and 2021-03-10
+df <- get_timeseries(rics = c("AAPL.O", "TSLA.O"), startdate = as.Date("2021-03-01"), enddate = as.Date("2021-03-10"))
+head(df)
+
 }
