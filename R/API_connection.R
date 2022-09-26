@@ -22,7 +22,6 @@ ek_set_APIKEY <- function(api_key) {
 
     }
 
-
 }
 
 

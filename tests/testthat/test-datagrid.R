@@ -65,5 +65,22 @@ test_that("get_datagrid(), returns multiple rows for multiple fields", {
     ek_set_APIKEY(NULL)
 })
 
+test_that("get_datagrid(), accepts keyword arguments", {
+    skip_on_cran()
+    skip_on_ci()
+    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+
+    ESG <- data.frame(
+        Instrument = c("MSFT.O", "IBM", "TSLA.O", "AAPL.O", "NFLX.O"),
+        ESG.Score = c(92, 72, 63, 77, 29)
+    )
+
+    expect_equal(get_datagrid(c("MSFT.O", "IBM", "TSLA.O", "AAPL.O", "NFLX.O"), "TR.TRESGScore", SDate =
+      "2021-07-07"), ESG, tolerance = 0.5)
+
+    rm(ESG)
+    ek_set_APIKEY(NULL)
+})
+
 # Makes sure the API_KEY is reset
 ek_set_APIKEY(NULL)

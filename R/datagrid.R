@@ -7,11 +7,13 @@
 #'
 #' @param instrument - Vector of Char, can be CUSIP, rics
 #' @param fields - Vector of Char, fields to request from the datagrid
+#' @param ... - List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
+#' daily data (Frq) with a given start (SDate) and end date (EDate)
 #'
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields) {
+get_datagrid <- function(instrument, fields, ...) {
 
     # Typecheck
     if (!is.character(instrument) && !is.character(fields)) {
@@ -31,21 +33,39 @@ get_datagrid <- function(instrument, fields) {
         ))
     }
 
+
     # Converts vector to list
     instrument <- as.list(instrument)
 
     # Sets the direction
     directions <- 'DataGrid_StandardAsync'
 
-    # Builds the payload to be sent
-    payload <- list(
-      'requests' = list(
-        list(
-          'instruments' = instrument,
-          'fields' = lapply(fields, \(x) list("name" = x))
+    # Fetches the keyword arguments
+    kwargs <- list(...)
+
+    if (length(kwargs) != 0) {
+        # Builds the payload to be sent
+        payload <- list(
+          'requests' = list(
+            list(
+              'instruments' = instrument,
+              'fields' = lapply(fields, \(x) list("name" = x)),
+              'parameters' = kwargs
+            )
+          )
         )
-      )
-    )
+
+    } else {
+        # Builds the payload to be sent
+        payload <- list(
+          'requests' = list(
+            list(
+              'instruments' = instrument,
+              'fields' = lapply(fields, \(x) list("name" = x))
+            )
+          )
+        )
+    }
 
     # Sends the direction and payload, returns the results
     results <- send_json_request(directions, payload)
