@@ -4,7 +4,7 @@
 \alias{get_datagrid}
 \title{Fetching information from the datagrid}
 \usage{
-get_datagrid(instrument, fields)
+get_datagrid(instrument, fields, ...)
 }
 \arguments{
 \item{instrument}{\itemize{
@@ -13,6 +13,11 @@ get_datagrid(instrument, fields)
 
 \item{fields}{\itemize{
 \item Vector of Char, fields to request from the datagrid
+}}
+
+\item{...}{\itemize{
+\item List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
+daily data (Frq) with a given start (SDate) and end date (EDate)
 }}
 }
 \value{

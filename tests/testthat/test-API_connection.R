@@ -20,12 +20,12 @@ test_that("ek_get_url, url_builder test", {
 
     .pkgglobalenv$ek$base_url <- 'http://129.0.0.1'
     .pkgglobalenv$ek$port <- 9001L
-    .pkgglobalenv$ek$api_url <- '/api/v2/data'
+    .pkgglobalenv$ek$data_api <- '/api/v2/data'
     expect_equal(ek_get_url(), "http://129.0.0.1:9001/api/v2/data")
 
 
     .pkgglobalenv$ek$base_url <- 'http://127.0.0.1'
     .pkgglobalenv$ek$port <- 9000L
-    .pkgglobalenv$ek$api_url <- '/api/v1/data'
+    .pkgglobalenv$ek$data_api <- '/api/v1/data'
     expect_equal(ek_get_url(), "http://127.0.0.1:9000/api/v1/data")
 })

@@ -2,10 +2,10 @@
 % Please edit documentation in R/API_connection.R
 \name{ek_get_url}
 \alias{ek_get_url}
-\title{Fetches the url to send requests to}
+\title{Fetches the url to send data requests to}
 \usage{
 ek_get_url()
 }
 \description{
-Fetches the url to send requests to
+Fetches the url to send data requests to
 }

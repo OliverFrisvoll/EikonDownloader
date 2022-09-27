@@ -10,7 +10,8 @@ ts_payload_loop <- function(directions, rics, fields, interval, start, end) {
     )
 
     # Sends the direction and payload, returns the results
-    send_json_request(directions, payload)$timeseriesData
+    json <- json_builder(directions, payload)
+    send_json_request(json)$timeseriesData
 }
 
 

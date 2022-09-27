@@ -6,7 +6,22 @@
     .pkgglobalenv$ek <- list(
       base_url = 'http://127.0.0.1',
       port = 9000L,
-      api_url = '/api/v1/data',
+      data_api = '/api/v1/data',
+      search_api = '/api/rdp/discovery/searchlight/v1',
       api_key = NULL
+    )
+    .pkgglobalenv$rd <- list(
+      searchViewParams = c(
+        "Query",
+        "Filter",
+        "View",
+        "OrderBy",
+        "Boost",
+        "Select",
+        "Top",
+        "Skip",
+        "GroupBy",
+        "GroupCount"
+      )
     )
 }

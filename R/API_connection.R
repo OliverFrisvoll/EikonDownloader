@@ -13,41 +13,47 @@ ek_set_APIKEY <- function(api_key) {
     }
 
     if (is.null(api_key)) {
-
         invisible(.pkgglobalenv$ek$api_key <- NULL)
 
     } else {
-
         invisible(.pkgglobalenv$ek$api_key <- api_key)
 
     }
-
 }
 
 
 #' Fetches the Eikon API_KEY
 ek_get_APIKEY <- function() {
     if (is.null(.pkgglobalenv$ek$api_key)) {
-
         cli::cli_abort(c(
           "Missing API_KEY",
           "x" = "API_KEY not set",
           "i" = "Use ek_set_APIKEY(<API_KEY>) to set an api_key"
         ))
+
     } else {
         .pkgglobalenv$ek$api_key
+
     }
 }
 
 
-#' Fetches the url to send requests to
+#' Fetches the url to send data requests to
 ek_get_url <- function() {
     paste0(
       .pkgglobalenv$ek$base_url,
       ":",
       .pkgglobalenv$ek$port,
-      .pkgglobalenv$ek$api_url
+      .pkgglobalenv$ek$data_api
     )
 }
 
-
+#' Fetches the url to send searchlight requests to
+ek_get_searchlight <- function() {
+    paste0(
+      .pkgglobalenv$ek$base_url,
+      ":",
+      .pkgglobalenv$ek$port,
+      .pkgglobalenv$ek$search_api
+    )
+}

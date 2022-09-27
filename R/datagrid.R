@@ -67,8 +67,8 @@ get_datagrid <- function(instrument, fields, ...) {
         )
     }
 
-    # Sends the direction and payload, returns the results
-    results <- send_json_request(directions, payload)
+    json <- json_builder(directions, payload)
+    results <- send_json_request(json)
 
     if ("error" %in% names(results$responses[[1]])) {
         # TODO: Add a handler for error code 416: Unable to collect data for the field 'TR.RICCode' and some specific
