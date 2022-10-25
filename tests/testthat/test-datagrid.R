@@ -71,8 +71,8 @@ test_that("get_datagrid(), accepts keyword arguments", {
     ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
 
     ESG <- data.frame(
-        Instrument = c("MSFT.O", "IBM", "TSLA.O", "AAPL.O", "NFLX.O"),
-        ESG.Score = c(92, 72, 63, 77, 29)
+      Instrument = c("MSFT.O", "IBM", "TSLA.O", "AAPL.O", "NFLX.O"),
+      ESG.Score = c(92, 72, 63, 77, 29)
     )
 
     expect_equal(get_datagrid(c("MSFT.O", "IBM", "TSLA.O", "AAPL.O", "NFLX.O"), "TR.TRESGScore", SDate =
@@ -81,6 +81,25 @@ test_that("get_datagrid(), accepts keyword arguments", {
     rm(ESG)
     ek_set_APIKEY(NULL)
 })
+
+test_that("get_datgrid(), check is empty results somewhere is accepted", {
+    skip_on_cran()
+    skip_on_ci()
+    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+
+    df <- get_datagrid(
+      instrument = c('USDSB3L1Y=', "USDSB3L2Y="),
+      fields = c('TR.BIDPRICE', 'TR.ASKPRICE'),
+      SDate = "2010-01-01",
+      EDate = "2010-03-01",
+      Frq = "D"
+    )
+    expect_true(ncol(df) == 3)
+    expect_true(nrow(df) == 81)
+
+    ek_set_APIKEY(NULL)
+})
+
 
 # Makes sure the API_KEY is reset
 ek_set_APIKEY(NULL)

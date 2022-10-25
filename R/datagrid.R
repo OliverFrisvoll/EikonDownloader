@@ -110,7 +110,13 @@ get_datagrid <- function(instrument, fields, ...) {
     } else {
 
         column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
-        purrr::map_dfr(data, ~as.data.frame(., col.names = column_names))
+
+        loop <- function(data) {
+            data <- purrr::map(data, ~ifelse(.x == "", NA, .x))
+            as.data.frame(data, col.names = column_names)
+        }
+
+        purrr::map_dfr(data, loop)
 
     }
 }
