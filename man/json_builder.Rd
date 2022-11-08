@@ -6,6 +6,18 @@
 \usage{
 json_builder(directions, payload)
 }
+\arguments{
+\item{directions}{\itemize{
+\item Where
+}}
+
+\item{payload}{\itemize{
+\item What
+}}
+}
+\value{
+Nested list that fit into the JSON scheme
+}
 \description{
 Builds a json like list for the Eikon Data API
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/search.R
 \name{search_view}
 \alias{search_view}
-\title{A function to search through Eikon
+\title{A function to search through Eikon !!WIP!!
 TODO: Write documentation}
 \usage{
 search_view(..., API = "/", debug = FALSE)

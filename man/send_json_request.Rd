@@ -2,7 +2,7 @@
 % Please edit documentation in R/send_request.R
 \name{send_json_request}
 \alias{send_json_request}
-\title{Send JSON request to the Eikon API}
+\title{Send JSON POST request to the given service}
 \usage{
 send_json_request(json, service = "", debug = FALSE)
 }
@@ -23,5 +23,5 @@ send_json_request(json, service = "", debug = FALSE)
 Returns the results from the query
 }
 \description{
-Sends a POST request to the API with the given payload and a direction
+Sends a POST request to the given service with a jsonlike object
 }

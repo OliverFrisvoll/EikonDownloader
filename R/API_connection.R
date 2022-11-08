@@ -27,7 +27,13 @@ ek_set_APIKEY <- function(api_key) {
 #'
 #' @export
 ek_set_port <- function(port) {
-    .pkgglobalenv$ek$port = port
+    if (!is.numeric(port)) {
+        cli::cli_abort(c(
+          "TypeError",
+          "x" = "The port supplied: {port} is not a number"
+        ))
+    }
+    .pkgglobalenv$ek$port <- port
 }
 
 
