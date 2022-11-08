@@ -21,6 +21,15 @@ ek_set_APIKEY <- function(api_key) {
     }
 }
 
+#' Function to set api_port
+#'
+#' @param port - The port
+#'
+#' @export
+ek_set_port <- function(port) {
+    .pkgglobalenv$ek$port = port
+}
+
 
 #' Fetches the Eikon API_KEY
 ek_get_APIKEY <- function() {
@@ -57,3 +66,4 @@ ek_get_searchlight <- function() {
       .pkgglobalenv$ek$search_api
     )
 }
+
