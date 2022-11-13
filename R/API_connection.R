@@ -24,7 +24,10 @@ ek_set_APIKEY <- function(api_key = NULL) {
 
 #' Function to set api_port
 #'
-#' @param port - The new port to use
+#' Only needed if the Refinitiv Terminal is running on a port that
+#' is not between 9000L and 9011L
+#'
+#' @param port - The new port to use, (default NULL)
 #'
 #' @export
 ek_set_port <- function(port = NULL) {
