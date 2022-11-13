@@ -3,7 +3,7 @@
 #' @param api_key - The api_key to be used
 #'
 #' @export
-ek_set_APIKEY <- function(api_key) {
+ek_set_APIKEY <- function(api_key = NULL) {
 
     if (!is.character(api_key) && !is.null(api_key)) {
         cli::cli_abort(c(
@@ -26,14 +26,61 @@ ek_set_APIKEY <- function(api_key) {
 #' @param port - The port
 #'
 #' @export
-ek_set_port <- function(port) {
-    if (!is.numeric(port)) {
+ek_set_port <- function(port = NULL) {
+    if (!is.numeric(port) && !is.null(port)) {
         cli::cli_abort(c(
           "TypeError",
-          "x" = "The port supplied: {port} is not a number"
+          "x" = "The port supplied: {port} is not a number or NULL"
         ))
     }
-    invisible(.pkgglobalenv$ek$port <- as.integer(port))
+
+    if (is.null(port)) {
+        invisible(.pkgglobalenv$ek$port <- NULL)
+
+    } else {
+        invisible(.pkgglobalenv$ek$port <- as.integer(port))
+    }
+}
+
+#' Getting the port that is set
+ek_get_port <- function() {
+    .pkgglobalenv$ek$port
+}
+
+
+#' Tests the connection to Eikon
+ek_test_connection <- function() {
+    ek_get_APIKEY()
+
+    current_port <- ek_get_port()
+    test_ports <- 9000L:9010L
+    test_ports <- test_ports[-current_port]
+    test_ports <- c(current_port, test_ports)
+
+    for (port in test_ports) {
+        status <- tryCatch({
+            ek_set_port(port)
+            get_datagrid("TSLA.O", "TR.RICCode")
+            return(TRUE)
+        },
+          error = function(cond) {
+              return(FALSE)
+          }
+        )
+        if (status) {
+            break
+        }
+    }
+    if (!status) {
+        ek_set_port(current_port)
+        cli::cli_abort(c(
+          "ConnectionError",
+          "x" = "Can't connect to the Refinitiv Terminal on any normal ports",
+          "i" = "Make sure the terminal is running or set manual port with ek_set_port(<port>)"
+        ))
+    } else {
+        status
+    }
 }
 
 

@@ -14,6 +14,7 @@
 #'
 #' @export
 get_datagrid <- function(instrument, fields, ...) {
+    status <- ek_test_connection()
 
     # Typecheck
     if (!is.character(instrument) && !is.character(fields)) {
