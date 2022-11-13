@@ -33,7 +33,7 @@ ek_set_port <- function(port) {
           "x" = "The port supplied: {port} is not a number"
         ))
     }
-    .pkgglobalenv$ek$port <- port
+    invisible(.pkgglobalenv$ek$port <- as.integer(port))
 }
 
 
