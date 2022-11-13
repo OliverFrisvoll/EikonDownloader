@@ -85,11 +85,17 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
     interval <- tolower(interval)
 
     # Max rows pr request
-    MAX_ROWS <- 2800L
+    MAX_ROWS <- 3000L
+    # Max companies pr request
+    MAX_COMPANIES <- 300L
 
     # Converts vectors to lists
     rics <- as.list(rics)
     fields <- as.list(fields)
+
+    if (length(rics) > MAX_COMPANIES) {
+        chunks_of_rics <- split(rics, ceiling(seq_along(rics)/MAX_COMPANIES))
+    }
 
     date_list <- seq_of_dates(startdate, enddate, interval, MAX_ROWS / length(rics))
 
