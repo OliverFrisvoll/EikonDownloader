@@ -16,6 +16,7 @@ ek_set_APIKEY <- function(api_key = NULL) {
         invisible(.pkgglobalenv$ek$api_key <- NULL)
 
     } else {
+
         invisible(.pkgglobalenv$ek$api_key <- api_key)
 
     }
@@ -38,6 +39,7 @@ ek_set_port <- function(port = NULL) {
         invisible(.pkgglobalenv$ek$port <- NULL)
 
     } else {
+        ek_test_connection()
         invisible(.pkgglobalenv$ek$port <- as.integer(port))
     }
 }
@@ -60,7 +62,22 @@ ek_test_connection <- function() {
     for (port in test_ports) {
         status <- tryCatch({
             ek_set_port(port)
-            get_datagrid("TSLA.O", "TR.RICCode")
+            instrument <- list("TSLA.O")
+            fields <- list("TR.RICCode")
+            directions <- 'DataGrid_StandardAsync'
+
+            payload <- list(
+              'requests' = list(
+                list(
+                  'instruments' = instrument,
+                  'fields' = lapply(fields, \(x) list("name" = x))
+                )
+              )
+            )
+
+            json_builder(directions, payload) |>
+              send_json_request()
+
             return(TRUE)
         },
           error = function(cond) {

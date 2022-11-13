@@ -54,7 +54,6 @@ to_dataframe <- function(snippet) {
 #'
 #' @export
 get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'daily') {
-    status <- ek_test_connection()
 
     # Type checks
     if (!is.character(rics)) {
