@@ -16,8 +16,8 @@ ek_set_APIKEY <- function(api_key = NULL) {
         invisible(.pkgglobalenv$ek$api_key <- NULL)
 
     } else {
-
-        invisible(.pkgglobalenv$ek$api_key <- api_key)
+        .pkgglobalenv$ek$api_key <- api_key
+        invisible(ek_test_connection())
 
     }
 }
@@ -39,7 +39,6 @@ ek_set_port <- function(port = NULL) {
         invisible(.pkgglobalenv$ek$port <- NULL)
 
     } else {
-        ek_test_connection()
         invisible(.pkgglobalenv$ek$port <- as.integer(port))
     }
 }
@@ -57,11 +56,9 @@ ek_test_connection <- function() {
     current_port <- ek_get_port()
     test_ports <- 9000L:9010L
     test_ports <- test_ports[-current_port]
-    test_ports <- c(current_port, test_ports)
 
     for (port in test_ports) {
         status <- tryCatch({
-            ek_set_port(port)
             instrument <- list("TSLA.O")
             fields <- list("TR.RICCode")
             directions <- 'DataGrid_StandardAsync'
@@ -81,6 +78,7 @@ ek_test_connection <- function() {
             return(TRUE)
         },
           error = function(cond) {
+              ek_set_port(port)
               return(FALSE)
           }
         )
