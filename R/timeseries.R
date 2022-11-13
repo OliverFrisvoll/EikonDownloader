@@ -95,23 +95,29 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
 
     if (length(rics) > MAX_COMPANIES) {
         chunks_of_rics <- split(rics, ceiling(seq_along(rics)/MAX_COMPANIES))
+    } else {
+        chunks_of_rics <- list(rics)
     }
 
-    date_list <- seq_of_dates(startdate, enddate, interval, MAX_ROWS / length(rics))
+    results <- list()
 
-    # Sends the requests divided into multiple requests that adhere to the 3000 rows limit imposed
-    # TODO: Change this so that there is a payload packer that creates a lists of payloads and then sends the queries
-    results <- purrr::pmap(
-      date_list,
-      ~ts_payload_loop(
-        rics = rics,
-        fields = fields,
-        directions = 'TimeSeries',
-        interval = interval,
-        start = .x,
-        end = .y
-      )) |>
-      unlist(recursive = FALSE)
+    for (rics in chunks_of_rics) {
+        date_list <- seq_of_dates(startdate, enddate, interval, MAX_ROWS / length(rics))
+        # Sends the requests divided into multiple requests that adhere to the 3000 rows limit imposed
+        res <- purrr::pmap(
+          date_list,
+          ~ts_payload_loop(
+            rics = rics,
+            fields = fields,
+            directions = 'TimeSeries',
+            interval = interval,
+            start = .x,
+            end = .y
+          )) |>
+          unlist(recursive = FALSE)
+
+          results <- append(results, res)
+      }
 
 
     # Removes querries that didn't return anything
