@@ -2,10 +2,12 @@
 % Please edit documentation in R/send_request.R
 \name{POST_searchView}
 \alias{POST_searchView}
-\title{TODO: Write documentation}
+\title{POST request for searchview
+TODO: Write documentation}
 \usage{
 POST_searchView(json, service = "/", debug = FALSE)
 }
 \description{
+POST request for searchview
 TODO: Write documentation
 }

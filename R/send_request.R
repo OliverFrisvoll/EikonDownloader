@@ -49,6 +49,7 @@ send_json_request <- function(json, service = "", debug = FALSE) {
     results
 }
 
+#' POST request for searchview
 #' TODO: Write documentation
 POST_searchView <- function(json, service = "/", debug = FALSE) {
 
@@ -68,7 +69,7 @@ POST_searchView <- function(json, service = "/", debug = FALSE) {
 
 #' Quick check if the application can be run.
 #' TODO: Write documentation
-Health_searchView <- function() {
+health_searchView <- function() {
     results <- ""
 
     tryCatch({

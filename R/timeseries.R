@@ -1,3 +1,13 @@
+#' Timeseries payload loop
+#'
+#' @param directions - Where to send the request
+#' @param rics - Rics of the companies that will be looked up
+#' @param fields - The fields to return for those companies
+#' @param interval - the interval
+#' @param start - Start date, JSON format
+#' @param end - End date, JSON format
+#'
+#' @return JSON results
 ts_payload_loop <- function(directions, rics, fields, interval, start, end) {
 
     # Builds the payload to be sent
