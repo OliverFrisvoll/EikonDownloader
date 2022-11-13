@@ -50,7 +50,14 @@ send_json_request <- function(json, service = "", debug = FALSE) {
 }
 
 #' POST request for searchview
+#'
 #' TODO: Write documentation
+#'
+#' @param json - The JSON to send
+#' @param service - Which service to use
+#' @param debug - Should debugging be on or off
+#'
+#' @return returns the results
 POST_searchView <- function(json, service = "/", debug = FALSE) {
 
     query <- httr::POST(

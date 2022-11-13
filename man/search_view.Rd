@@ -5,8 +5,25 @@
 \title{A function to search through Eikon !!WIP!!
 TODO: Write documentation}
 \usage{
-search_view(..., API = "/", debug = FALSE)
+search_view(API = "/", debug = FALSE, ...)
+}
+\arguments{
+\item{API}{\itemize{
+\item API to use
+}}
+
+\item{debug}{\itemize{
+\item If debugging should be turned on.
+}}
+
+\item{...}{\itemize{
+\item Query, Filter, View, OrderBy, Boost, Select, Top, Skip, GroupBy, GroupCount
+}}
+}
+\value{
+The result of the query
 }
 \description{
-parameters: Query, Filter, View, OrderBy, Boost, Select, Top, Skip, GroupBy, GroupCount
+A function to search through Eikon !!WIP!!
+TODO: Write documentation
 }

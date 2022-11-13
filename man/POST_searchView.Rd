@@ -2,12 +2,26 @@
 % Please edit documentation in R/send_request.R
 \name{POST_searchView}
 \alias{POST_searchView}
-\title{POST request for searchview
-TODO: Write documentation}
+\title{POST request for searchview}
 \usage{
 POST_searchView(json, service = "/", debug = FALSE)
 }
+\arguments{
+\item{json}{\itemize{
+\item The JSON to send
+}}
+
+\item{service}{\itemize{
+\item Which service to use
+}}
+
+\item{debug}{\itemize{
+\item Should debugging be on or off
+}}
+}
+\value{
+returns the results
+}
 \description{
-POST request for searchview
 TODO: Write documentation
 }

@@ -24,7 +24,7 @@ ek_set_APIKEY <- function(api_key = NULL) {
 
 #' Function to set api_port
 #'
-#' @param port - The port
+#' @param port - The new port to use
 #'
 #' @export
 ek_set_port <- function(port = NULL) {

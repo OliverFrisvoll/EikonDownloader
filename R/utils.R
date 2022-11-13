@@ -1,6 +1,8 @@
 #' Converts date to JSON formate
 #'
-#' @param - Date to convert
+#' @param date - The date to convert
+#'
+#' @return date converted to JSON in string format
 date_to_JSON <- function(date) {
     # "converts" to JSON format
     format(date, format = "%Y-%Om-%dT%H:%M:%SZ")
