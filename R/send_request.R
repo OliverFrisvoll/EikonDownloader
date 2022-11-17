@@ -22,28 +22,32 @@ json_builder <- function(directions, payload) {
 #' @export
 send_json_request <- function(json, service = "", debug = FALSE) {
 
-    # Sends a query and sets up a pointer to the location
-    query <- httr::POST(
-      ek_get_url(),
-      httr::add_headers(
-        'Content-Type' = 'application/json',
-        'x-tr-applicationid' = ek_get_APIKEY()
-      ),
-      body = json,
-      encode = "json"
-    )
+    while(TRUE) {
+        # Sends a query and sets up a pointer to the location
+        query <- httr::POST(
+          ek_get_url(),
+          httr::add_headers(
+            'Content-Type' = 'application/json',
+            'x-tr-applicationid' = ek_get_APIKEY()
+          ),
+          body = json,
+          encode = "json"
+        )
 
-    # Fetches the content from the query
-    results <- httr::content(query)
+        # Fetches the content from the query
+        results <- httr::content(query)
 
-    # Checks for ErrorCode and then aborts after printing message
-    if (is.numeric(results$ErrorCode)) {
+        # Checks for ErrorCode and then aborts after printing message
+        if (is.numeric(results$ErrorCode)) {
+            Sys.sleep(5)
+            # cli::cli_abort(c(
+            #   "Error code: {results$ErrorCode}",
+            #   "x" = "{results$ErrorMessage}"
+            # ))
 
-        cli::cli_abort(c(
-          "Error code: {results$ErrorCode}",
-          "x" = "{results$ErrorMessage}"
-        ))
-
+        } else {
+            break
+        }
     }
     # Returns the results
     results
