@@ -22,7 +22,7 @@ json_builder <- function(directions, payload) {
 #' @export
 send_json_request <- function(json, service = "", debug = FALSE) {
 
-    while(TRUE) {
+    while (TRUE) {
         # Sends a query and sets up a pointer to the location
         query <- httr::POST(
           ek_get_url(),
@@ -39,11 +39,16 @@ send_json_request <- function(json, service = "", debug = FALSE) {
 
         # Checks for ErrorCode and then aborts after printing message
         if (is.numeric(results$ErrorCode)) {
-            Sys.sleep(5)
-            # cli::cli_abort(c(
-            #   "Error code: {results$ErrorCode}",
-            #   "x" = "{results$ErrorMessage}"
-            # ))
+
+            if (results$ErrorCode == 2504) {
+                Sys.sleep(5)
+
+            } else {
+                cli::cli_abort(c(
+                  "Error code: {results$ErrorCode}",
+                  "x" = "{results$ErrorMessage}"
+                ))
+            }
 
         } else {
             break
