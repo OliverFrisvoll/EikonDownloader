@@ -7,13 +7,14 @@
 #'
 #' @param instrument - Vector of Char, can be CUSIP, rics
 #' @param fields - Vector of Char, fields to request from the datagrid
+#' @param json - if it should just return the json results, default FALSE
 #' @param ... - List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
 #' daily data (Frq) with a given start (SDate) and end date (EDate)
 #'
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields, ...) {
+get_datagrid <- function(instrument, fields, json = FALSE, ...) {
 
     # Typecheck
     if (!is.character(instrument) && !is.character(fields)) {
@@ -87,7 +88,10 @@ get_datagrid <- function(instrument, fields, ...) {
 
     }
 
-    results$responses[[1]]$headers[[1]]
+    # Returns the jsonlike results if json = TRUE
+    if (json) {
+        return(results)
+    }
 
     data <- results$responses[[1]]$data
     column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
