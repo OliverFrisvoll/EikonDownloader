@@ -40,7 +40,7 @@ send_json_request <- function(json, service = "", debug = FALSE) {
         # Checks for ErrorCode and then aborts after printing message
         if (is.numeric(results$ErrorCode)) {
 
-            if (results$ErrorCode == 2504 | results$ErrorCode == 500) {
+            if (results$ErrorCode == 2504 | results$ErrorCode == 500 | results$ErrorCode == 400) {
                 Sys.sleep(5)
 
             } else {
