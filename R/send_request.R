@@ -16,7 +16,7 @@ json_builder <- function(directions, payload) {
 #'
 #' @param json - The nested list resembeling JSON that should be sent to the server
 #' @param service - !!WIP!! The service to send the message to
-#' @param debug - Default to FALSE, turns on debugging messages.
+#' @param debug - Default to FALSE, turns on debugging messages
 #'
 #' @return Returns the results from the query
 #' @export
