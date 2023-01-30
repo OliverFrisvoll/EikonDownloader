@@ -8,18 +8,18 @@
 #' @param instrument - Vector of Char, can be CUSIP, rics
 #' @param fields - Vector of Char, fields to request from the datagrid
 #' @param debug - if it should just return the json results, default FALSE
+#' @param MAX_ROWS - Max amount of rows to send with each payload, default 10000L
 #' @param ... - List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
 #' daily data (Frq) with a given start (SDate) and end date (EDate)
 #'
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields, debug = FALSE, ...) {
+get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, ...) {
 
     # The limit value is around 10,000 data points for version 1.0.2 and below.
     # No enforced limit for version 1.1.0 and above.
     # However, it still has a server timeout around 300 seconds.
-    MAX_ROWS <- 10000L
     MAX_COMPANIES <- 7000L
     DAYS_PR_YEAR <- 250L
 
