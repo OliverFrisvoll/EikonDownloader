@@ -9,6 +9,7 @@
       search_api = '/api/rdp/discovery/searchlight/v1',
       api_key = NULL
     )
+
     .pkgglobalenv$rd <- list(
       searchViewParams = c(
         "Query",

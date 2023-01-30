@@ -16,6 +16,13 @@
 #' @export
 get_datagrid <- function(instrument, fields, debug = FALSE, ...) {
 
+    # The limit value is around 10,000 data points for version 1.0.2 and below.
+    # No enforced limit for version 1.1.0 and above.
+    # However, it still has a server timeout around 300 seconds.
+    MAX_ROWS <- 10000L
+    MAX_COMPANIES <- 7000L
+    DAYS_PR_YEAR <- 250L
+
     # Typecheck
     if (!is.character(instrument) && !is.character(fields)) {
         cli::cli_abort(c(
@@ -43,33 +50,121 @@ get_datagrid <- function(instrument, fields, debug = FALSE, ...) {
 
     # Fetches the keyword arguments
     kwargs <- list(...)
+    extraparam <- names(kwargs)
 
-    if (length(kwargs) != 0) {
-        # Builds the payload to be sent
-        payload <- list(
-          'requests' = list(
-            list(
-              'instruments' = instrument,
-              'fields' = lapply(fields, \(x) list("name" = x)),
-              'parameters' = kwargs
-            )
-          )
-        )
+    if ("SDate" %in% extraparam & "EDate" %in% extraparam) {
+
+        year_span <- lubridate::interval(lubridate::ymd(kwargs$SDate), lubridate::ymd(kwargs$EDate)) |>
+          lubridate::as.duration() |>
+          as.numeric("years")
+
+        if ("Frq" %in% extraparam) {
+
+            if (kwargs$Frq == "D") {
+                results_pr_instrument <- year_span * DAYS_PR_YEAR
+
+            } else if (kwargs$Frq == "M") {
+                results_pr_instrument <- year_span * (DAYS_PR_YEAR / 12)
+
+            } else if (kwargsFrq == "Y") {
+                results_pr_instrument <- year_span
+
+            }
+
+        } else {
+            results_pr_instrument <- year_span * DAYS_PR_YEAR
+        }
+
+        chunk_size <- floor(MAX_ROWS / results_pr_instrument)
 
     } else {
-        # Builds the payload to be sent
-        payload <- list(
-          'requests' = list(
-            list(
-              'instruments' = instrument,
-              'fields' = lapply(fields, \(x) list("name" = x))
-            )
-          )
-        )
+        chunk_size <- MAX_COMPANIES
     }
 
-    json <- json_builder(directions, payload)
-    results <- send_json_request(json)
+    suppressWarnings(
+      chunks_of_instruments <- split(instrument, 1:(ceiling(length(instrument) / chunk_size)))
+    )
+
+    if (!is.null(chunks_of_instruments)) {
+
+        results <- list()
+        i <- 1
+        m <- length(chunks_of_instruments)
+        start <- Sys.time()
+
+        # Builds the payload to be sent
+        for (intruments in chunks_of_instruments) {
+
+            payload <- list(
+              'requests' = list(
+                list(
+                  'instruments' = intruments,
+                  'fields' = lapply(fields, \(x) list("name" = x)),
+                  'parameters' = kwargs
+                )
+              )
+            )
+
+            json <- json_builder(directions, payload)
+            new_results <- send_json_request(json)
+
+            if (!length(results)) {
+
+                results <- append(results, new_results)
+
+            } else {
+                # MIGHT BE BUGGY
+                results$responses[[1]]$data <- append(results$responses[[1]]$data, new_results$responses[[1]]$data)
+                results$responses[[1]]$totalRowsCount <- results$responses[[1]]$totalRowsCount + new_results$responses[[1]]$totalRowsCount
+
+                if ("error" %in% names(new_results$responses[[1]])) {
+                    results$responses[[1]]$error <- append(results$responses[[1]]$error, new_results$responses[[1]]$error)
+                }
+                # Works pretty well, for some strange reason.
+            }
+
+            if (i %% 5 == 0) {
+
+                elapsed <- round(as.numeric(difftime(time1 = Sys.time(), time2 = start, units = "mins")), 4)
+                ETA <- (elapsed / i) * (m - i)
+                msg <- paste0("Downloading Data, payload ", i, "/", m, " | Elapsed: ", round(elapsed, 2), " min", " | ETA: ", round(ETA, 2), " min")
+                cli::cli_inform(c(
+                  "i" = msg
+                ))
+            }
+
+            i <- i + 1
+        }
+
+    }
+    #     else {
+    #
+    #     # Builds the payload to be sent
+    #     payload <- list(
+    #       'requests' = list(
+    #         list(
+    #           'instruments' = instrument,
+    #           'fields' = lapply(fields, \(x) list("name" = x))
+    #         )
+    #       )
+    #     )
+    #
+    #     json <- json_builder(directions, payload)
+    #     results <- send_json_request(json)
+    #
+    # }
+
+    cli::cli_inform(c(
+      "v" = "Downloaded {prettyunits::pretty_bytes(object.size(results)[1])}"
+    ))
+
+    if (debug) {
+        return(results)
+    }
+
+    cli::cli_inform(c(
+      "i" = "Building dataframe"
+    ))
 
     if ("error" %in% names(results$responses[[1]])) {
         # TODO: Add a handler for error code 416: Unable to collect data for the field 'TR.RICCode' and some specific
@@ -88,45 +183,16 @@ get_datagrid <- function(instrument, fields, debug = FALSE, ...) {
 
     }
 
-    if (debug) {
-        return(results)
-    }
 
     data <- results$responses[[1]]$data
     column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
 
     data_df <- purrr::map_dfr(data, ~as.data.frame(purrr::map(., \(x) ifelse(is.null(x), NA, as.character(x))), col.names = column_names))
 
+    cli::cli_inform(c(
+      "v" = "dataframe built"
+    ))
+
     return(data_df)
 
-
-    # null_results <- purrr::imap_int(data, ~ifelse(!is.null(.x[[2]]), NA, .y))
-    # null_results <- null_results[!is.na(null_results)]
-    # if (length(null_results > 0)) {
-    #
-    #     data <- data[-null_results]
-    #
-    # }
-    #
-    # if (length(data) < 0) {
-    #
-    #     # TODO: Create test
-    #     cli::cli_warn(c(
-    #       "No Results",
-    #       "x" = "Your query with instruments: {instument[1]}... for fields: {fields[1]}... did not return anything",
-    #       "i" = "Maybe check the spelling?"
-    #     ))
-    #
-    # } else {
-    #
-    #     column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
-    #
-    #     loop <- function(data) {
-    #         data <- purrr::map(data, ~ifelse(.x == "", NA, .x))
-    #         as.data.frame(data, col.names = column_names)
-    #     }
-    #
-    #     purrr::map_dfr(data, loop)
-    #
-    # }
 }
