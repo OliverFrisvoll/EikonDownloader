@@ -64,7 +64,7 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, .
                 results_pr_instrument <- year_span * DAYS_PR_YEAR
 
             } else if (kwargs$Frq == "M") {
-                results_pr_instrument <- year_span * (DAYS_PR_YEAR / 12)
+                results_pr_instrument <- year_span * 12
 
             } else if (kwargs$Frq == "Y") {
                 results_pr_instrument <- year_span
