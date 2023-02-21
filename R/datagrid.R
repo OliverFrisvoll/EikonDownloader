@@ -87,6 +87,8 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 6000L, MP
         chunk_size <- MAX_COMPANIES
     }
 
+
+
     suppressWarnings(
       chunks_of_instruments <- split(instrument, 1:(ceiling(length(instrument) / chunk_size)))
     )
@@ -154,7 +156,7 @@ dg_fetch_headers <- function(json_like) {
 #' @export
 dg_to_dataframe <- function(json_like) {
 
-    headers <- json_like %>%
+    headers <- json_like |>
       dg_fetch_headers()
 
     purrr::map_dfr(json_like, \(data)
