@@ -17,10 +17,11 @@ json_builder <- function(directions, payload) {
 #' @param json - The nested list resembeling JSON that should be sent to the server
 #' @param service - !!WIP!! The service to send the message to
 #' @param debug - Default to FALSE, turns on debugging messages
+#' @param app_key
 #'
 #' @return Returns the results from the query
 #' @export
-send_json_request <- function(json, service = "", debug = FALSE) {
+send_json_request <- function(json, app_key, url, debug = FALSE) {
 
     if (debug) {
         print(jsonlite::toJSON(json))
@@ -29,10 +30,10 @@ send_json_request <- function(json, service = "", debug = FALSE) {
     while (TRUE) {
         # Sends a query and sets up a pointer to the location
         query <- httr::POST(
-          ek_get_url(),
+          url,
           httr::add_headers(
             'Content-Type' = 'application/json',
-            'x-tr-applicationid' = ek_get_APIKEY()
+            'x-tr-applicationid' = app_key
           ),
           body = json,
           encode = "json"

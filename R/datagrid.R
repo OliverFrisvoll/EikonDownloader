@@ -15,7 +15,7 @@
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, ...) {
+get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 6000L, ...) {
 
     # The limit value is around 10,000 data points for version 1.0.2 and below.
     # No enforced limit for version 1.1.0 and above.
@@ -85,58 +85,27 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, .
       chunks_of_instruments <- split(instrument, 1:(ceiling(length(instrument) / chunk_size)))
     )
 
-    if (!is.null(chunks_of_instruments)) {
+    url <- 'http://127.0.0.1:9000/api/v1/data'
+    app_key <- "f63dab2c283546a187cd6c59894749a2228ce486"
 
-        results <- list()
-        i <- 1
-        m <- length(chunks_of_instruments)
-        start <- Sys.time()
+    # Builds the payload to be sent
+    loop <- function(instruments) {
 
-        # Builds the payload to be sent
-        for (intruments in chunks_of_instruments) {
-
-            payload <- list(
-              'requests' = list(
-                list(
-                  'instruments' = intruments,
-                  'fields' = lapply(fields, \(x) list("name" = x)),
-                  'parameters' = kwargs
-                )
-              )
+        payload <- list(
+          'requests' = list(
+            list(
+              'instruments' = instruments,
+              'fields' = lapply(fields, \(x) list("name" = x)),
+              'parameters' = kwargs
             )
+          )
+        )
 
-            json <- json_builder(directions, payload)
-            new_results <- send_json_request(json)
-
-            if (!length(results)) {
-
-                results <- append(results, new_results)
-
-            } else {
-                # MIGHT BE BUGGY
-                results$responses[[1]]$data <- append(results$responses[[1]]$data, new_results$responses[[1]]$data)
-                results$responses[[1]]$totalRowsCount <- results$responses[[1]]$totalRowsCount + new_results$responses[[1]]$totalRowsCount
-
-                if ("error" %in% names(new_results$responses[[1]])) {
-                    results$responses[[1]]$error <- append(results$responses[[1]]$error, new_results$responses[[1]]$error)
-                }
-                # Works pretty well, for some strange reason.
-            }
-
-            if (i %% 5 == 0) {
-
-                elapsed <- round(as.numeric(difftime(time1 = Sys.time(), time2 = start, units = "mins")), 4)
-                ETA <- (elapsed / i) * (m - i)
-                msg <- paste0("Downloading Data, payload ", i, "/", m, " | Elapsed: ", round(elapsed, 2), " min", " | ETA: ", round(ETA, 2), " min")
-                cli::cli_inform(c(
-                  "i" = msg
-                ))
-            }
-
-            i <- i + 1
-        }
-
+        json <- json_builder(directions, payload)
+        send_json_request(json, app_key, url)
     }
+
+    results <- future.apply::future_lapply(chunks_of_instruments, loop)
 
     cli::cli_inform(c(
       "v" = "Downloaded {prettyunits::pretty_bytes(object.size(results)[1])}"
