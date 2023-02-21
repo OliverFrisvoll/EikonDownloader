@@ -51,40 +51,34 @@ ek_get_port <- function() {
     .pkgglobalenv$ek$port
 }
 
+#' Check status
+ek_get_status <- function(port) {
+    address <- paste0(.pkgglobalenv$ek$base_url, ":", port, "/api/status")
+    status <- tryCatch({
+        httr::http_status(httr::GET(address))$reason == "OK"
+    },
+      error = function(cond) {
+          FALSE
+      }
+    )
+
+    status
+}
+
 
 #' Tests the connection to Eikon
 ek_test_connection <- function() {
-    ek_get_APIKEY()
-
     current_port <- ek_get_port()
+
+    if (ek_get_status(current_port)) {
+        return(TRUE)
+    }
+
     test_ports <- 9000L:9010L
     test_ports <- test_ports[-current_port]
 
     for (port in test_ports) {
-        status <- tryCatch({
-            instrument <- list("TSLA.O")
-            fields <- list("TR.RICCode")
-            directions <- 'DataGrid_StandardAsync'
-
-            payload <- list(
-              'requests' = list(
-                list(
-                  'instruments' = instrument,
-                  'fields' = lapply(fields, \(x) list("name" = x))
-                )
-              )
-            )
-
-            json_builder(directions, payload) |>
-              send_json_request()
-
-            return(TRUE)
-        },
-          error = function(cond) {
-              ek_set_port(port)
-              return(FALSE)
-          }
-        )
+        status <- ek_get_status(port)
         if (status) {
             break
         }

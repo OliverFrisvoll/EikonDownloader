@@ -15,7 +15,7 @@
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, ...) {
+get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, ...) {
 
     # The limit value is around 10,000 data points for version 1.0.2 and below.
     # No enforced limit for version 1.1.0 and above.
@@ -137,22 +137,6 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, .
         }
 
     }
-    #     else {
-    #
-    #     # Builds the payload to be sent
-    #     payload <- list(
-    #       'requests' = list(
-    #         list(
-    #           'instruments' = instrument,
-    #           'fields' = lapply(fields, \(x) list("name" = x))
-    #         )
-    #       )
-    #     )
-    #
-    #     json <- json_builder(directions, payload)
-    #     results <- send_json_request(json)
-    #
-    # }
 
     cli::cli_inform(c(
       "v" = "Downloaded {prettyunits::pretty_bytes(object.size(results)[1])}"

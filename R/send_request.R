@@ -22,6 +22,10 @@ json_builder <- function(directions, payload) {
 #' @export
 send_json_request <- function(json, service = "", debug = FALSE) {
 
+    if (debug) {
+        print(jsonlite::toJSON(json))
+    }
+
     while (TRUE) {
         # Sends a query and sets up a pointer to the location
         query <- httr::POST(
@@ -40,7 +44,9 @@ send_json_request <- function(json, service = "", debug = FALSE) {
         # Checks for ErrorCode and then aborts after printing message
         if (is.numeric(results$ErrorCode)) {
 
-            if (results$ErrorCode == 2504 | results$ErrorCode == 500 | results$ErrorCode == 400) {
+            if (results$ErrorCode == 2504 |
+              results$ErrorCode == 500 |
+              results$ErrorCode == 400) {
                 Sys.sleep(5)
 
             } else {
