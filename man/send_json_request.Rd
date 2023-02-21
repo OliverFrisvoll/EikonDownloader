@@ -4,19 +4,17 @@
 \alias{send_json_request}
 \title{Send JSON POST request to the given service}
 \usage{
-send_json_request(json, service = "", debug = FALSE)
+send_json_request(json, app_key, url, debug = FALSE)
 }
 \arguments{
 \item{json}{\itemize{
 \item The nested list resembeling JSON that should be sent to the server
 }}
 
-\item{service}{\itemize{
-\item !!WIP!! The service to send the message to
-}}
+\item{app_key}{}
 
 \item{debug}{\itemize{
-\item Default to FALSE, turns on debugging messages.
+\item Default to FALSE, turns on debugging messages
 }}
 }
 \value{

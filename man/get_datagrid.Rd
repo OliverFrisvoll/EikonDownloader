@@ -4,7 +4,15 @@
 \alias{get_datagrid}
 \title{Fetching information from the datagrid}
 \usage{
-get_datagrid(instrument, fields, ...)
+get_datagrid(
+  instrument,
+  fields,
+  debug = FALSE,
+  MAX_ROWS = 6000L,
+  MP = FALSE,
+  rDF = TRUE,
+  ...
+)
 }
 \arguments{
 \item{instrument}{\itemize{
@@ -13,6 +21,22 @@ get_datagrid(instrument, fields, ...)
 
 \item{fields}{\itemize{
 \item Vector of Char, fields to request from the datagrid
+}}
+
+\item{debug}{\itemize{
+\item if it should just return the json results, default FALSE
+}}
+
+\item{MAX_ROWS}{\itemize{
+\item Max amount of rows to send with each payload, default 10000L
+}}
+
+\item{MP}{\itemize{
+\item If the function should be run in paralell, default FALSE // NOT IMPLIMENTED
+}}
+
+\item{rDF}{\itemize{
+\item If the function should return a dataframe, default TRUE
 }}
 
 \item{...}{\itemize{

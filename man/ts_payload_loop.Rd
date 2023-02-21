@@ -4,7 +4,17 @@
 \alias{ts_payload_loop}
 \title{Timeseries payload loop}
 \usage{
-ts_payload_loop(directions, rics, fields, interval, start, end)
+ts_payload_loop(
+  directions,
+  rics,
+  fields,
+  interval,
+  start,
+  end,
+  app_key,
+  url,
+  debug = FALSE
+)
 }
 \arguments{
 \item{directions}{\itemize{
@@ -29,6 +39,18 @@ ts_payload_loop(directions, rics, fields, interval, start, end)
 
 \item{end}{\itemize{
 \item End date, JSON format
+}}
+
+\item{app_key}{\itemize{
+\item API key
+}}
+
+\item{url}{\itemize{
+\item URL to send the request to
+}}
+
+\item{debug}{\itemize{
+\item Debug mode, prints the payload and the results
 }}
 }
 \value{

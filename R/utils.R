@@ -112,3 +112,33 @@ calculate_returns <- function(prices, type = "simple") {
     types[[type]](prices)
 
 }
+
+#' Printing a debug message
+#'
+#' @param test - Boolean if the message should be printed
+#' @param msg - String with message
+debug_msg <- function(test, msg) {
+    if (test) {
+        cat(cli::bg_red(msg), "\n")
+    }
+}
+
+#' Printing a msg to inform about something
+#'
+#' @param msg - String with message
+info_msg <- function(msg) {
+    cli::cli_inform(c(
+      "i" = msg
+    ))
+}
+
+
+#' Printing a msg when something is done
+#'
+#' @param msg - String with message
+done_msg <- function(msg) {
+    cli::cli_inform(c(
+      "v" = msg
+    ))
+}
+

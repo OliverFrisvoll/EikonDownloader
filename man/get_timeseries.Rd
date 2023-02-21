@@ -4,7 +4,14 @@
 \alias{get_timeseries}
 \title{Get timeseries data from Eikon using RIC as identifier}
 \usage{
-get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
+get_timeseries(
+  rics,
+  fields = "*",
+  startdate,
+  enddate,
+  interval = "daily",
+  debug = FALSE
+)
 }
 \arguments{
 \item{rics}{\itemize{

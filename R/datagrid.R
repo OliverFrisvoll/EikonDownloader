@@ -9,19 +9,25 @@
 #' @param fields - Vector of Char, fields to request from the datagrid
 #' @param debug - if it should just return the json results, default FALSE
 #' @param MAX_ROWS - Max amount of rows to send with each payload, default 10000L
+#' @param MP - If the function should be run in paralell, default FALSE // NOT IMPLIMENTED
+#' @param rDF - If the function should return a dataframe, default TRUE
 #' @param ... - List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
 #' daily data (Frq) with a given start (SDate) and end date (EDate)
 #'
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 6000L, ...) {
+get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 6000L, MP = FALSE, rDF = TRUE, ...) {
 
     # The limit value is around 10,000 data points for version 1.0.2 and below.
     # No enforced limit for version 1.1.0 and above.
     # However, it still has a server timeout around 300 seconds.
     MAX_COMPANIES <- 7000L
     DAYS_PR_YEAR <- 250L
+
+    url <- ek_get_url()
+    app_key <- ek_get_APIKEY()
+
 
     # Typecheck
     if (!is.character(instrument) && !is.character(fields)) {
@@ -60,10 +66,10 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 6000L, ..
 
         if ("Frq" %in% extraparam) {
 
-            if (kwargs$Frq == "D") {
+            if (kwargs$Frq %in% c("D")) {
                 results_pr_instrument <- year_span * DAYS_PR_YEAR
 
-            } else if (kwargs$Frq == "M") {
+            } else if (kwargs$Frq %in% c("M")) {
                 results_pr_instrument <- year_span * 12
 
             } else if (kwargs$Frq %in% c("Y", "FY")) {
@@ -85,8 +91,7 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 6000L, ..
       chunks_of_instruments <- split(instrument, 1:(ceiling(length(instrument) / chunk_size)))
     )
 
-    url <- 'http://127.0.0.1:9000/api/v1/data'
-    app_key <- "f63dab2c283546a187cd6c59894749a2228ce486"
+    debug_msg(debug, paste("Requests to send: ", length(chunks_of_instruments)))
 
     # Builds the payload to be sent
     loop <- function(instruments) {
@@ -102,50 +107,60 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 6000L, ..
         )
 
         json <- json_builder(directions, payload)
-        send_json_request(json, app_key, url)
+        send_json_request(json, app_key, url, debug)
     }
 
     results <- future.apply::future_lapply(chunks_of_instruments, loop)
 
-    cli::cli_inform(c(
-      "v" = "Downloaded {prettyunits::pretty_bytes(object.size(results)[1])}"
-    ))
+    done_msg(paste("Downloaded: ", prettyunits::pretty_bytes(object.size(results)[1])))
 
-    if (debug) {
+    if (!rDF) {
         return(results)
     }
 
-    cli::cli_inform(c(
-      "i" = "Building dataframe"
-    ))
+    info_msg("Building dataframe")
 
-    if ("error" %in% names(results$responses[[1]])) {
-        # TODO: Add a handler for error code 416: Unable to collect data for the field 'TR.RICCode' and some specific
-        #  identifier(s)
+    df <- dg_to_dataframe(results)
 
-        error <- results$responses[[1]]$error[[1]]
+    done_msg("Dateframe Built")
 
-        if (error$code == 218) {
-
-            cli::cli_abort(c(
-              "No Results",
-              "x" = "The field could not be found"
-            ))
-
-        }
-
-    }
-
-
-    data <- results$responses[[1]]$data
-    column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
-
-    data_df <- purrr::map_dfr(data, ~as.data.frame(purrr::map(., \(x) ifelse(is.null(x), NA, as.character(x))), col.names = column_names))
-
-    cli::cli_inform(c(
-      "v" = "dataframe built"
-    ))
-
-    return(data_df)
+    return(df)
 
 }
+
+#' Fetches the headers of a json object
+#'
+#' @param json_like - json_like object, in reality a nested list
+#'
+#' @return list of headers
+dg_fetch_headers <- function(json_like) {
+
+    header <- c()
+    for (col in json_like[[1]][["responses"]][[1]]["headers"][[1]][[1]]) {
+        if (length(names(col)) > 1) {
+            header <- append(header, paste0(col["field"]))
+        } else {
+            header <- append(header, col["displayName"])
+        }
+    }
+    header
+}
+
+#' Converts a json object to a dataframe
+#'
+#' @param json_like - json_like object, in reality a nested list
+#'
+#' @return dataframe
+#' @export
+dg_to_dataframe <- function(json_like) {
+
+    headers <- json_like %>%
+      dg_fetch_headers()
+
+    purrr::map_dfr(json_like, \(data)
+      purrr::map_dfr(data$responses[[1]]$data, \(y) as.data.frame(
+        purrr::map(y, \(x) ifelse(is.null(x), NA, as.character(x))), col.names = headers)
+      )
+    )
+}
+

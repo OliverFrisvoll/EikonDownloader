@@ -6,9 +6,12 @@
 #' @param interval - the interval
 #' @param start - Start date, JSON format
 #' @param end - End date, JSON format
+#' @param app_key - API key
+#' @param url - URL to send the request to
+#' @param debug - Debug mode, prints the payload and the results
 #'
 #' @return JSON results
-ts_payload_loop <- function(directions, rics, fields, interval, start, end) {
+ts_payload_loop <- function(directions, rics, fields, interval, start, end, app_key, url, debug = FALSE) {
 
     # Builds the payload to be sent
     payload <- list(
@@ -21,7 +24,7 @@ ts_payload_loop <- function(directions, rics, fields, interval, start, end) {
 
     # Sends the direction and payload, returns the results
     json <- json_builder(directions, payload)
-    send_json_request(json)$timeseriesData
+    send_json_request(json, app_key, url, debug)$timeseriesData
 }
 
 
@@ -63,7 +66,7 @@ to_dataframe <- function(snippet) {
 #' @return A dataframe with the data requested
 #'
 #' @export
-get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'daily') {
+get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'daily', debug = FALSE) {
 
     # Type checks
     if (!is.character(rics)) {
@@ -98,13 +101,15 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
     MAX_ROWS <- 3000L
     # Max companies pr request
     MAX_COMPANIES <- 300L
+    url <- ek_get_url()
+    app_key <- ek_get_APIKEY()
 
     # Converts vectors to lists
     rics <- as.list(rics)
     fields <- as.list(fields)
 
     if (length(rics) > MAX_COMPANIES) {
-        chunks_of_rics <- split(rics, ceiling(seq_along(rics)/MAX_COMPANIES))
+        chunks_of_rics <- split(rics, ceiling(seq_along(rics) / MAX_COMPANIES))
     } else {
         chunks_of_rics <- list(rics)
     }
@@ -122,12 +127,15 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
             directions = 'TimeSeries',
             interval = interval,
             start = .x,
-            end = .y
+            end = .y,
+            app_key = app_key,
+            url = url,
+            debug = debug
           )) |>
           unlist(recursive = FALSE)
 
-          results <- append(results, res)
-      }
+        results <- append(results, res)
+    }
 
 
     # Removes querries that didn't return anything
