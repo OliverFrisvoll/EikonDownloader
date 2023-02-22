@@ -88,7 +88,6 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 6000L, MP
     }
 
 
-
     suppressWarnings(
       chunks_of_instruments <- split(instrument, 1:(ceiling(length(instrument) / chunk_size)))
     )
@@ -159,10 +158,11 @@ dg_to_dataframe <- function(json_like) {
     headers <- json_like |>
       dg_fetch_headers()
 
-    purrr::map_dfr(json_like, \(data)
+    res <- future.apply::future_lapply(json_like, \(data)
       purrr::map_dfr(data$responses[[1]]$data, \(y) as.data.frame(
         purrr::map(y, \(x) ifelse(is.null(x), NA, as.character(x))), col.names = headers)
       )
     )
+    do.call(rbind, res)
 }
 
