@@ -17,8 +17,6 @@ ek_set_APIKEY <- function(api_key = NULL) {
 
     } else {
         .pkgglobalenv$ek$api_key <- api_key
-        invisible(ek_test_connection())
-
     }
 }
 
@@ -51,50 +49,6 @@ ek_get_port <- function() {
     .pkgglobalenv$ek$port
 }
 
-#' Check status
-ek_get_status <- function(port) {
-    address <- paste0(.pkgglobalenv$ek$base_url, ":", port, "/api/status")
-    status <- tryCatch({
-        httr::http_status(httr::GET(address))$reason == "OK"
-    },
-      error = function(cond) {
-          FALSE
-      }
-    )
-
-    status
-}
-
-
-#' Tests the connection to Eikon
-ek_test_connection <- function() {
-    current_port <- ek_get_port()
-
-    if (ek_get_status(current_port)) {
-        return(TRUE)
-    }
-
-    test_ports <- 9000L:9010L
-    test_ports <- test_ports[-current_port]
-
-    for (port in test_ports) {
-        status <- ek_get_status(port)
-        if (status) {
-            break
-        }
-    }
-    if (!status) {
-        ek_set_port(current_port)
-        cli::cli_abort(c(
-          "ConnectionError",
-          "x" = "Can't connect to the Refinitiv Terminal on any normal ports",
-          "i" = "Make sure the terminal is running or set manual port with ek_set_port(<port>)"
-        ))
-    } else {
-        status
-    }
-}
-
 
 #' Fetches the Eikon API_KEY
 ek_get_APIKEY <- function() {
@@ -111,24 +65,7 @@ ek_get_APIKEY <- function() {
     }
 }
 
-
 #' Fetches the url to send data requests to
-ek_get_url <- function() {
-    paste0(
-      .pkgglobalenv$ek$base_url,
-      ":",
-      .pkgglobalenv$ek$port,
-      .pkgglobalenv$ek$data_api
-    )
+ek_get_ip <- function() {
+    .pkgglobalenv$ek$ip
 }
-
-#' Fetches the url to send searchlight requests to
-ek_get_searchlight <- function() {
-    paste0(
-      .pkgglobalenv$ek$base_url,
-      ":",
-      .pkgglobalenv$ek$port,
-      .pkgglobalenv$ek$search_api
-    )
-}
-
