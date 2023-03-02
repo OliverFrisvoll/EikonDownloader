@@ -11,7 +11,7 @@
 #' @useDynLib EikonDownloader, .registration = TRUE
 NULL
 
-rust_get_dg <- function(instruments, fields, param, api, ip, port) .Call(wrap__rust_get_dg, instruments, fields, param, api, ip, port)
+rust_get_dg <- function(instruments, fields, param, api) .Call(wrap__rust_get_dg, instruments, fields, param, api)
 
 rust_get_ts <- function(rics, fields, Frq, Start_Date, End_Date, api) .Call(wrap__rust_get_ts, rics, fields, Frq, Start_Date, End_Date, api)
 

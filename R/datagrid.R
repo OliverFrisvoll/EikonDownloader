@@ -47,8 +47,6 @@ get_datagrid <- function(instrument, fields, ...) {
     }
 
     api <- ek_get_APIKEY()
-    ip <- ek_get_ip()
-    port <- ek_get_port()
 
     rust_get_dg(
       instruments = instrument,

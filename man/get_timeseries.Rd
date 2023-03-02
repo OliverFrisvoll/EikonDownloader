@@ -12,7 +12,7 @@ get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
 }}
 
 \item{fields}{\itemize{
-\item Fields to return, can be found on the Refinitiv Workspace
+\item Fields to return, can be found on Refinitiv Workspace
 }}
 
 \item{startdate}{\itemize{
