@@ -43,7 +43,7 @@ to_dataframe <- function(snippet) {
     }
 
     results <- purrr::map_dfr(snippet$dataPoints, dataframe_parse)
-    results$RIC.Code <- snippet$ric
+    results$RIC <- snippet$ric
 
     results
 }
@@ -160,7 +160,7 @@ fetch_timeseries <- function(CUSIP, start_date, end_date) {
 
     cusip_rics <- get_datagrid(CUSIP, 'TR.RICCode')
 
-    timeseries <- get_timeseries(cusip_rics$RIC.Code, startdate = start_date, enddate = end_date) |>
-      dplyr::left_join(cusip_rics, by = "RIC.Code")
+    timeseries <- get_timeseries(cusip_rics$RIC, startdate = start_date, enddate = end_date) |>
+      dplyr::left_join(cusip_rics, by = "RIC")
 
 }

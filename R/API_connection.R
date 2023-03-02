@@ -17,6 +17,7 @@ ek_set_APIKEY <- function(api_key = NULL) {
 
     } else {
         .pkgglobalenv$ek$api_key <- api_key
+        ek_test_connection()
         invisible(ek_test_connection())
 
     }
@@ -47,6 +48,7 @@ ek_set_port <- function(port = NULL) {
 }
 
 #' Getting the port that is set
+#' @export
 ek_get_port <- function() {
     .pkgglobalenv$ek$port
 }

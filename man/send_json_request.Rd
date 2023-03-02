@@ -16,7 +16,7 @@ send_json_request(json, service = "", debug = FALSE)
 }}
 
 \item{debug}{\itemize{
-\item Default to FALSE, turns on debugging messages.
+\item Default to FALSE, turns on debugging messages
 }}
 }
 \value{
