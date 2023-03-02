@@ -20,37 +20,8 @@ ek_set_APIKEY <- function(api_key = NULL) {
     }
 }
 
-#' Function to set api_port
-#'
-#' Only needed if the Refinitiv Terminal is running on a port that
-#' is not between 9000L and 9011L
-#'
-#' @param port - The new port to use, (default NULL)
-#'
-#' @export
-ek_set_port <- function(port = NULL) {
-    if (!is.numeric(port) && !is.null(port)) {
-        cli::cli_abort(c(
-          "TypeError",
-          "x" = "The port supplied: {port} is not a number or NULL"
-        ))
-    }
-
-    if (is.null(port)) {
-        invisible(.pkgglobalenv$ek$port <- NULL)
-
-    } else {
-        invisible(.pkgglobalenv$ek$port <- as.integer(port))
-    }
-}
-
-#' Getting the port that is set
-ek_get_port <- function() {
-    .pkgglobalenv$ek$port
-}
-
-
 #' Fetches the Eikon API_KEY
+#' @export
 ek_get_APIKEY <- function() {
     if (is.null(.pkgglobalenv$ek$api_key)) {
         cli::cli_abort(c(
@@ -63,9 +34,4 @@ ek_get_APIKEY <- function() {
         .pkgglobalenv$ek$api_key
 
     }
-}
-
-#' Fetches the url to send data requests to
-ek_get_ip <- function() {
-    .pkgglobalenv$ek$ip
 }

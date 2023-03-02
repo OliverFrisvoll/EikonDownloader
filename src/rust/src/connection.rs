@@ -1,5 +1,5 @@
 use serde_json::json;
-
+use reqwest::blocking::Response;
 
 pub struct Connection {
     app_key: String,
@@ -26,18 +26,14 @@ impl Connection {
         &self.app_key
     }
 
-    fn set_port(&mut self, port: i16) { self.port = port }
+    pub fn set_port(&mut self, port: i16) { self.port = port }
 
-    pub fn status(&self, port: &i16) -> u16 {
+    pub fn status(&self, port: &i16) -> reqwest::Result<Response> {
         let address = format!("{}:{}/api/status", self.get_url(), port);
-
         let client = reqwest::blocking::Client::new();
         client.get(address)
             .header("X-tr-applicationid", self.get_app_key())
             .send()
-            .expect("Could not send request")
-            .status()
-            .as_u16()
     }
 
     pub fn handshake(&self) -> serde_json::Value {
@@ -67,7 +63,12 @@ impl Connection {
             .expect("Could not parse as JSON")
     }
 
-    pub fn send_request(&self, payload: serde_json::Value, direction: &String) -> reqwest::Result<serde_json::Value> {
+
+    pub fn send_request(
+        &self,
+        payload: serde_json::Value,
+        direction: &String,
+    ) -> reqwest::Result<serde_json::Value> {
         #[derive(serde::Serialize)]
         struct FullRequest {
             Entity: Entity,
@@ -100,15 +101,16 @@ impl Connection {
         };
     }
 
-    pub fn query_port(&mut self) -> Result<i16, i16> {
+    pub fn query_port(&self) -> Result<i16, ()> {
         for port in 9000..9010i16 {
-            if self.status(&port) == 200 {
-                self.set_port(port);
-                return Ok(port);
-            } else {
-                continue;
+            println!("Trying {}", port);
+
+            match self.status(&port) {
+                Ok(p) => { return Ok(port); }
+                Err(e) => { continue; }
             }
         }
-        Err(9000)
+        return Err(());
     }
 }
+

@@ -1,10 +1,9 @@
-use std::collections::{HashMap, BTreeMap};
-use std::fmt::Error;
+use std::collections::HashMap;
 use serde_json::json;
-use reqwest::Response;
-use chrono::prelude::*;
 use polars::prelude::*;
+use chrono::prelude::*;
 use crate::connection::Connection;
+use crate::utils::clean_string;
 
 
 pub struct Datagrid {
@@ -18,9 +17,11 @@ impl Datagrid {
         }
     }
 
-    fn assemble_payload(&self, instruments: Vec<String>,
-                        fields: &Vec<String>,
-                        param: &Option<HashMap<String, String>>,
+    fn assemble_payload(
+        &self,
+        instruments: Vec<String>,
+        fields: &Vec<String>,
+        param: &Option<HashMap<String, String>>,
     ) -> serde_json::Value {
         let fields_formatted: Vec<serde_json::Value> = fields
             .iter()
@@ -103,7 +104,7 @@ impl Datagrid {
 
     pub fn get_datagrid(&self, instruments: Vec<String>,
                         fields: Vec<String>,
-                        parameters: Option<HashMap<String, String>>) -> BTreeMap<String, Vec<String>> {
+                        parameters: Option<HashMap<String, String>>) -> PolarsResult<DataFrame> {
         let direction = String::from("DataGrid_StandardAsync");
         let groups = Datagrid::group_size(instruments.len(), &parameters);
 
@@ -118,43 +119,44 @@ impl Datagrid {
 
         let mut res = Vec::new();
         for payload in payloads {
-            res.push(self.connection.send_request(payload, &direction).unwrap())
+            res.push(self.connection.send_request(payload, &direction)
+                .expect("Payload error (get_datagrid)"))
         }
 
         self.to_data_frame(res)
     }
 
-    fn clean_string(s: String) -> String {
-        s.replace("\"", "")
-    }
 
     fn fetch_headers(json_like: &serde_json::Value) -> Vec<String> {
+        println!("{}", json_like["responses"][0]["headers"]);
+
+        // TODO, headers contains two fields displayName and field, The last one is not available for instrument sadly.
         json_like["responses"][0]["headers"][0]
             .as_array()
             .expect("Could not unwrap headers in json, (fetch_headers)")
             .iter()
-            .map(|x| Datagrid::clean_string(x["displayName"].to_string()))
+            .map(|x| clean_string(x["displayName"].to_string()))
             .collect()
     }
 
 
-    fn to_data_frame(&self, json_like: Vec<serde_json::Value>) -> BTreeMap<String, Vec<String>> {
+    fn to_data_frame(&self, json_like: Vec<serde_json::Value>) -> PolarsResult<DataFrame> {
         let headers = Datagrid::fetch_headers(&json_like[0]);
 
         // Extract data, combine with headers to make a dataframe
-        let mut df_vec: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        let mut df_vec: Vec<Series> = Vec::new();
 
         for col in 0..headers.len() {
-            let mut ser = Vec::new();
+            let mut ser: Vec<String> = Vec::new();
             for request in &json_like {
                 for row in request["responses"][0]["data"]
                     .as_array()
                     .unwrap() {
-                    ser.push(Datagrid::clean_string(row[col].to_string()));
+                    ser.push(clean_string(row[col].to_string()));
                 }
             }
-            df_vec.insert(headers[col].to_owned(), ser);
+            df_vec.push(Series::new(headers[col].as_str(), ser));
         }
-        df_vec
+        DataFrame::new(df_vec)
     }
 }
