@@ -52,9 +52,7 @@ get_datagrid <- function(instrument, fields, ...) {
       instruments = instrument,
       fields = fields,
       param = kwargs,
-      api = api,
-      ip = ip,
-      port = port
+      api = api
     ) |>
       data.frame()
 }
