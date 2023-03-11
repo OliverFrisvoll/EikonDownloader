@@ -82,6 +82,7 @@ ek_test_connection <- function() {
     for (port in test_ports) {
         status <- ek_get_status(port)
         if (status) {
+            ek_set_port(port)
             break
         }
     }
