@@ -172,13 +172,13 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, .
 
     debug_msg <<- results$responses[[1]]$headers[[1]]
 
-    if (is.null(results$responses[[1]]$headers[[1]][[1]]$displayName)) {
-        cli::cli_abort(c(
-          "No Results",
-          "x" = "The field(s) supplied are not present in any of the instruments",
-          "i" = "Use the Data Item Browser (DIB) in the Eikon/Refinitiv Terminal to find fields"
-        ))
-    }
+    # if (is.null(results$responses[[1]]$headers[[1]][[1]]$displayName)) {
+    #     cli::cli_abort(c(
+    #       "No Results",
+    #       "x" = "The field(s) supplied are not present in any of the instruments",
+    #       "i" = "Use the Data Item Browser (DIB) in the Eikon/Refinitiv Terminal to find fields"
+    #     ))
+    # }
 
     column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
 
