@@ -42,6 +42,8 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, .
     }
 
 
+    # TODO: ADD EDate if SDate is given
+
     # Converts vector to list
     instrument <- as.list(instrument)
 
@@ -180,7 +182,15 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, .
     #     ))
     # }
 
-    column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
+    tryCatch({
+        column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
+    }, error = function(e) {
+        cli::cli_abort(c(
+          "No Results",
+          "x" = "The field(s) supplied are not present in any of the instruments",
+          "i" = "Use the Data Item Browser (DIB) in the Eikon/Refinitiv Terminal to find fields"
+        ))
+    })
 
     data_df <- purrr::map_dfr(data, ~as.data.frame(purrr::map(., \(x) ifelse(is.null(x), NA, as.character(x))), col.names = column_names))
 
