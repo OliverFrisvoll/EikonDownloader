@@ -29,7 +29,7 @@ send_json_request <- function(json, service = "", debug = FALSE) {
     while (TRUE) {
         # Sends a query and sets up a pointer to the location
         query <- httr::POST(
-          ek_get_url(),
+          ek_get_address(),
           httr::add_headers(
             'Content-Type' = 'application/json',
             'x-tr-applicationid' = ek_get_APIKEY()

@@ -3,7 +3,7 @@
 #' @param api_key - The api_key to be used
 #'
 #' @export
-ek_set_APIKEY <- function(api_key = NULL) {
+ek_set_APIKEY <- function(api_key = NULL, debug = FALSE) {
 
     if (!is.character(api_key) && !is.null(api_key)) {
         cli::cli_abort(c(
@@ -17,10 +17,18 @@ ek_set_APIKEY <- function(api_key = NULL) {
 
     } else {
         .pkgglobalenv$ek$api_key <- api_key
-        ek_test_connection()
-        invisible(ek_test_connection())
-
+        port <- ek_fetch_port(debug = debug)
+        ek_set_port(port)
+        invisible(port)
     }
+}
+
+#' Abort function if no connection can be established
+no_res <- function() {
+    cli::cli_abort(c(
+      "Cannot connect to the Refinitiv / Eikon Terminal",
+      "x" = "Either the app_key is faulty or Refinitiv / Eikon is not running on this computer",
+    ))
 }
 
 #' Function to set api_port
@@ -67,7 +75,6 @@ ek_get_status <- function(port) {
     status
 }
 
-
 #' Tests the connection to Eikon
 ek_test_connection <- function() {
     current_port <- ek_get_port()
@@ -76,7 +83,7 @@ ek_test_connection <- function() {
         return(TRUE)
     }
 
-    test_ports <- 9000L:9010L
+    test_ports <- 9000L:9060L
     test_ports <- test_ports[-current_port]
 
     for (port in test_ports) {
@@ -97,7 +104,6 @@ ek_test_connection <- function() {
     }
 }
 
-
 #' Fetches the Eikon API_KEY
 ek_get_APIKEY <- function() {
     if (is.null(.pkgglobalenv$ek$api_key)) {
@@ -113,9 +119,8 @@ ek_get_APIKEY <- function() {
     }
 }
 
-
 #' Fetches the url to send data requests to
-ek_get_url <- function() {
+ek_get_address <- function() {
     paste0(
       .pkgglobalenv$ek$base_url,
       ":",
@@ -132,5 +137,86 @@ ek_get_searchlight <- function() {
       .pkgglobalenv$ek$port,
       .pkgglobalenv$ek$search_api
     )
+}
+
+#' Fetches Eikon port from file
+ek_fetch_port <- function(debug = FALSE) {
+    port <- NULL
+    app_names <- c("Data API Proxy", "Eikon API proxy", "Eikon Scripting Proxy")
+    path <- list()
+
+    if (debug) {
+        cli::cli_inform("System: {Sys.info()['sysname']}")
+    }
+
+    for (app_author in c("Refinitiv", "Thomson Reuters")) {
+
+        if (Sys.info()['sysname'] == "Linux") {
+            for (app_name in app_names) {
+                if (dir.exists(user_config_dir(app_name, app_author, roaming = TRUE))) {
+                    path <- append(path, user_config_dir(app_name, app_author, roaming = TRUE))
+                }
+            }
+        } else {
+            for (app_name in app_names) {
+                if (dir.exists(user_data_dir(app_name, app_author, roaming = TRUE))) {
+                    path <- append(path, user_data_dir(app_name, app_author, roaming = TRUE))
+                }
+            }
+        }
+    }
+
+    if (length(path) > 0) {
+        port_in_use_file <- file.path(path[[1]], ".portInUse")
+
+
+        if (file.exists(port_in_use_file)) {
+            port_str <- readr::read_file(port_in_use_file)
+            if (port_str != "") {
+                port <- as.integer(port_str)
+                if (debug) {
+                    cli::cli_inform("Found port {port}")
+                }
+                res <- ek_get_status(port)
+
+                if (res) {
+                    if (debug) {
+                        cli::cli_inform("Port {port} works")
+                    }
+                    return(port)
+                }
+            } else {
+                if (debug) {
+                    cli::cli_inform("{port_in_use_file} is empty")
+                }
+            }
+
+        } else {
+            if (debug) {
+                cli::cli_inform(".portInUse file does not exist in folder {port_in_use_file}")
+            }
+        }
+
+    } else {
+        if (debug) {
+            cli::cli_inform("Found no path to look for .portInUse")
+        }
+    }
+
+    if (is.null(port)) {
+        if (debug) {
+            cli::cli_inform("Trying to find port by bruteforce")
+        }
+        for (p in 9000L:9060L) {
+            if (ek_get_status(p)) {
+                port <- p
+                break
+            }
+        }
+        if (is.null(port)) {
+            no_res()
+        }
+    }
+    port
 }
 
