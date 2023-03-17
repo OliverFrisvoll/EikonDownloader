@@ -23,5 +23,17 @@ test_that("Tests if it's possible to set and fetch port, address, url and such",
 })
 
 test_that("ek_fetch_port finds a numeric port, only works if Eikon is currently running", {
+    skip_on_ci()
+    skip_on_cran()
     expect_true(is.integer(ek_fetch_port()))
+})
+
+test_that("ek_get_APIKEY() finds port and sets API_KEY", {
+    skip_on_ci()
+    skip_on_cran()
+    expect_equal(ek_set_APIKEY("APIKEY"), .pkgglobalenv$ek$port)
+    expect_equal("APIKEY", .pkgglobalenv$ek$api_key)
+
+    # Resetting to load time variables.
+    .onLoad()
 })

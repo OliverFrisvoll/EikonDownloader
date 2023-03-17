@@ -23,13 +23,6 @@ ek_set_APIKEY <- function(api_key = NULL, debug = FALSE) {
     }
 }
 
-#' Abort function if no connection can be established
-no_res <- function() {
-    cli::cli_abort(c(
-      "Cannot connect to the Refinitiv / Eikon Terminal",
-      "x" = "Either the app_key is faulty or Refinitiv / Eikon is not running on this computer",
-    ))
-}
 
 #' Function to set api_port
 #'
@@ -71,38 +64,9 @@ ek_get_status <- function(port) {
           FALSE
       }
     )
-
     status
 }
 
-#' Tests the connection to Eikon
-ek_test_connection <- function() {
-    current_port <- ek_get_port()
-
-    if (ek_get_status(current_port)) {
-        return(TRUE)
-    }
-
-    test_ports <- 9000L:9060L
-    test_ports <- test_ports[-current_port]
-
-    for (port in test_ports) {
-        status <- ek_get_status(port)
-        if (status) {
-            break
-        }
-    }
-    if (!status) {
-        ek_set_port(current_port)
-        cli::cli_abort(c(
-          "ConnectionError",
-          "x" = "Can't connect to the Refinitiv Terminal on any normal ports",
-          "i" = "Make sure the terminal is running or set manual port with ek_set_port(<port>)"
-        ))
-    } else {
-        status
-    }
-}
 
 #' Fetches the Eikon API_KEY
 ek_get_APIKEY <- function() {
@@ -214,7 +178,10 @@ ek_fetch_port <- function(debug = FALSE) {
             }
         }
         if (is.null(port)) {
-            no_res()
+            cli::cli_abort(c(
+              "Cannot connect to the Refinitiv / Eikon Terminal",
+              "x" = "Refinitiv / Eikon is not running on this computer",
+            ))
         }
     }
     port
