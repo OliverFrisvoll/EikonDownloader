@@ -93,16 +93,6 @@ ek_get_address <- function() {
     )
 }
 
-#' Fetches the url to send searchlight requests to
-ek_get_searchlight <- function() {
-    paste0(
-      .pkgglobalenv$ek$base_url,
-      ":",
-      .pkgglobalenv$ek$port,
-      .pkgglobalenv$ek$search_api
-    )
-}
-
 #' Fetches Eikon port from file
 ek_fetch_port <- function(debug = FALSE) {
     port <- NULL
