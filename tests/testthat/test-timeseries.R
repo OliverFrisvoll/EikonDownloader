@@ -1,8 +1,3 @@
-# test_that("", {
-#
-# })
-
-
 test_that("get_timeseries(), returns error on faulty types", {
     expect_error(get_timeseries(
       rics = "2324",

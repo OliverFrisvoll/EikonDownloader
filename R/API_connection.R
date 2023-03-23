@@ -107,14 +107,14 @@ ek_fetch_port <- function(debug = FALSE) {
 
         if (Sys.info()['sysname'] == "Linux") {
             for (app_name in app_names) {
-                if (dir.exists(user_config_dir(app_name, app_author, roaming = TRUE))) {
-                    path <- append(path, user_config_dir(app_name, app_author, roaming = TRUE))
+                if (dir.exists(rappdirs::user_config_dir(app_name, app_author, roaming = TRUE))) {
+                    path <- append(path, rappdirs::user_config_dir(app_name, app_author, roaming = TRUE))
                 }
             }
         } else {
             for (app_name in app_names) {
-                if (dir.exists(user_data_dir(app_name, app_author, roaming = TRUE))) {
-                    path <- append(path, user_data_dir(app_name, app_author, roaming = TRUE))
+                if (dir.exists(rappdirs::user_data_dir(app_name, app_author, roaming = TRUE))) {
+                    path <- append(path, rappdirs::user_data_dir(app_name, app_author, roaming = TRUE))
                 }
             }
         }
