@@ -15,7 +15,7 @@
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, ...) {
+get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, ...) {
 
     # The limit value is around 10,000 data points for version 1.0.2 and below.
     # No enforced limit for version 1.1.0 and above.
