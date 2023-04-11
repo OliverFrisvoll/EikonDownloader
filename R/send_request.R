@@ -15,39 +15,43 @@ json_builder <- function(directions, payload) {
 #' Sends a POST request to the given service with a jsonlike object
 #'
 #' @param json - The nested list resembeling JSON that should be sent to the server
-#' @param service - !!WIP!! The service to send the message to
+#' @param app_key - The app_key to use
+#' @param url - The url to use
 #' @param debug - Default to FALSE, turns on debugging messages
 #'
 #' @return Returns the results from the query
 #' @export
-send_json_request <- function(json, service = "", debug = FALSE) {
+send_json_request <- function(json, app_key, url, debug = FALSE) {
 
-    if (debug) {
-        print(jsonlite::toJSON(json))
-    }
+    debug_msg(debug, paste0("Payload: ", jsonlite::toJSON(json)))
+    debug_msg(debug, paste0("URL: ", url))
+    debug_msg(debug, paste0("APP_KEY: ", app_key))
 
     while (TRUE) {
         # Sends a query and sets up a pointer to the location
         query <- httr::POST(
-          ek_get_address(),
+          url,
           httr::add_headers(
             'Content-Type' = 'application/json',
-            'x-tr-applicationid' = ek_get_APIKEY()
+            'x-tr-applicationid' = app_key
           ),
           body = json,
           encode = "json"
         )
 
+        debug_msg(debug, paste0("Status Code: ", httr::status_code(query)))
+
         # Fetches the content from the query
         results <- httr::content(query)
 
+        debug_msg(debug, httr::http_status(query))
         # Checks for ErrorCode and then aborts after printing message
         if (is.numeric(results$ErrorCode)) {
 
             if (results$ErrorCode == 2504 |
               results$ErrorCode == 500 |
               results$ErrorCode == 400) {
-                Sys.sleep(5)
+                Sys.sleep(1)
 
             } else {
                 cli::cli_abort(c(
@@ -60,6 +64,7 @@ send_json_request <- function(json, service = "", debug = FALSE) {
             break
         }
     }
+
     # Returns the results
     results
 }

@@ -4,7 +4,14 @@
 \alias{get_datagrid}
 \title{Fetching information from the datagrid}
 \usage{
-get_datagrid(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, ...)
+get_datagrid(
+  instrument,
+  fields,
+  debug = FALSE,
+  MAX_ROWS = 10000L,
+  rDF = TRUE,
+  ...
+)
 }
 \arguments{
 \item{instrument}{\itemize{
@@ -21,6 +28,10 @@ get_datagrid(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, ...)
 
 \item{MAX_ROWS}{\itemize{
 \item Max amount of rows to send with each payload, default 10000L
+}}
+
+\item{rDF}{\itemize{
+\item If the function should return a dataframe, default TRUE
 }}
 
 \item{...}{\itemize{

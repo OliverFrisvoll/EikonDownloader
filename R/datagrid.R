@@ -9,19 +9,23 @@
 #' @param fields - Vector of Char, fields to request from the datagrid
 #' @param debug - if it should just return the json results, default FALSE
 #' @param MAX_ROWS - Max amount of rows to send with each payload, default 10000L
+#' @param rDF - If the function should return a dataframe, default TRUE
+#'
 #' @param ... - List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
 #' daily data (Frq) with a given start (SDate) and end date (EDate)
 #'
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, ...) {
+get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, rDF = TRUE, ...) {
 
     # The limit value is around 10,000 data points for version 1.0.2 and below.
     # No enforced limit for version 1.1.0 and above.
     # However, it still has a server timeout around 300 seconds.
     MAX_COMPANIES <- 7000L
-    DAYS_PR_YEAR <- 250L
+
+    # Sets the direction
+    directions <- 'DataGrid_StandardAsync'
 
     # Typecheck
     if (!is.character(instrument) && !is.character(fields)) {
@@ -41,27 +45,88 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, .
         ))
     }
 
-
-    # TODO: ADD EDate if SDate is given
-
     # Converts vector to list
     instrument <- as.list(instrument)
 
-    # Sets the direction
-    directions <- 'DataGrid_StandardAsync'
-
     # Fetches the keyword arguments
     kwargs <- list(...)
+
+    # Figuring out how many rows pr instrument (RPI) is requested
+    rpi <- rows_pr_inst(kwargs, debug)
+    kwargs <- rpi[["kwargs"]]
+
+    # Setting max chunk_size
+    if ("SDate" %in% names(kwargs)) {
+        chunk_size <- min(floor(MAX_ROWS / rpi[["res"]]), MAX_COMPANIES)
+    } else {
+        chunk_size <- MAX_COMPANIES
+    }
+
+    chunk_size <- as.integer(chunk_size)
+    if (chunk_size == 0) {
+        chunk_size <- 1L
+    }
+
+    # Dividing the instruments into these chunks.
+    suppressWarnings(
+      chunks_of_instruments <- split(instrument, 1:(ceiling(length(instrument) / chunk_size)))
+    )
+
+    debug_msg(debug, paste("Requests to send: ", length(chunks_of_instruments)))
+
+    # Fetching connection detail
+    url <- ek_get_address()
+    app_key <- ek_get_APIKEY()
+
+    # Builds the payload to be sent
+    loop <- function(instruments) {
+
+        payload <- list(
+          'requests' = list(
+            list(
+              'instruments' = instruments,
+              'fields' = lapply(fields, \(x) list("name" = x)),
+              'parameters' = kwargs
+            )
+          )
+        )
+
+        json <- json_builder(directions, payload)
+        send_json_request(json, app_key, url, debug)
+    }
+
+    results <- future.apply::future_lapply(chunks_of_instruments, loop)
+    done_msg(paste("Downloaded: ", prettyunits::pretty_bytes(object.size(results)[1])))
+
+    if (!rDF) {
+        return(results)
+    }
+
+    info_msg("Building dataframe")
+    df <- dg_to_dataframe(results)
+    done_msg("Dateframe Built")
+    df
+}
+
+#' Figures out how many rows pr instrument.
+#'
+#' @param kwargs - Keyword arguments that can be passed to results
+#' @param debug - debug or not, default FALSE
+#'
+#' @return - Rows pr instrument
+rows_pr_inst <- function(kwargs, debug = FALSE) {
     extraparam <- names(kwargs)
+    DAYS_PR_YEAR <- 365L
+    if ("SDate" %in% extraparam & !("EDate" %in% extraparam)) {
+        kwargs$EDate <- lubridate::today()
+    }
 
-    if ("SDate" %in% extraparam & "EDate" %in% extraparam) {
-
+    if ("SDate" %in% extraparam) {
         year_span <- lubridate::interval(lubridate::ymd(kwargs$SDate), lubridate::ymd(kwargs$EDate)) |>
           lubridate::as.duration() |>
           as.numeric("years")
 
         if ("Frq" %in% extraparam) {
-
             if (kwargs$Frq == "D") {
                 results_pr_instrument <- year_span * DAYS_PR_YEAR
 
@@ -70,134 +135,56 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, .
 
             } else if (kwargs$Frq %in% c("Y", "FY")) {
                 results_pr_instrument <- year_span
-
             }
 
         } else {
             results_pr_instrument <- year_span * DAYS_PR_YEAR
         }
 
-        chunk_size <- floor(MAX_ROWS / results_pr_instrument)
-
     } else {
-        chunk_size <- MAX_COMPANIES
+        results_pr_instrument <- 1
     }
 
-    suppressWarnings(
-      chunks_of_instruments <- split(instrument, 1:(ceiling(length(instrument) / chunk_size)))
+    list(res = ceiling(results_pr_instrument), kwargs = kwargs)
+}
+
+
+#' Fetches the headers of a json object
+#'
+#' @param json_like - json_like object, in reality a nested list
+#'
+#' @return list of headers
+dg_fetch_headers <- function(json_like) {
+
+    header <- c()
+    for (col in json_like[[1]][["responses"]][[1]]["headers"][[1]][[1]]) {
+        header <- append(header, col["displayName"])
+
+        # Changes to field name if available
+        # if (length(names(col)) > 1) {
+        #     header <- append(header, paste0(col["field"]))
+        # } else {
+        #         header <- append(header, col["displayName"])
+        # }
+    }
+    header
+}
+
+#' Converts a json object to a dataframe
+#'
+#' @param json_like - json_like object, in reality a nested list
+#'
+#' @return dataframe
+#' @export
+dg_to_dataframe <- function(json_like) {
+
+    headers <- json_like |>
+      dg_fetch_headers()
+
+    res <- future.apply::future_lapply(json_like, \(data)
+      purrr::map_dfr(data$responses[[1]]$data, \(y) as.data.frame(
+        purrr::map(y, \(x) ifelse(is.null(x), NA, as.character(x))), col.names = headers)
+      )
     )
-
-    if (!is.null(chunks_of_instruments)) {
-
-        results <- list()
-        i <- 1
-        m <- length(chunks_of_instruments)
-        start <- Sys.time()
-
-        # Builds the payload to be sent
-        for (intruments in chunks_of_instruments) {
-
-            payload <- list(
-              'requests' = list(
-                list(
-                  'instruments' = intruments,
-                  'fields' = lapply(fields, \(x) list("name" = x)),
-                  'parameters' = kwargs
-                )
-              )
-            )
-
-            json <- json_builder(directions, payload)
-            new_results <- send_json_request(json)
-
-            if (!length(results)) {
-
-                results <- append(results, new_results)
-
-            } else {
-                # MIGHT BE BUGGY
-                results$responses[[1]]$data <- append(results$responses[[1]]$data, new_results$responses[[1]]$data)
-                results$responses[[1]]$totalRowsCount <- results$responses[[1]]$totalRowsCount + new_results$responses[[1]]$totalRowsCount
-
-                if ("error" %in% names(new_results$responses[[1]])) {
-                    results$responses[[1]]$error <- append(results$responses[[1]]$error, new_results$responses[[1]]$error)
-                }
-                # Works pretty well, for some strange reason.
-            }
-
-            if (i %% 5 == 0) {
-
-                elapsed <- round(as.numeric(difftime(time1 = Sys.time(), time2 = start, units = "mins")), 4)
-                ETA <- (elapsed / i) * (m - i)
-                msg <- paste0("Downloading Data, payload ", i, "/", m, " | Elapsed: ", round(elapsed, 2), " min", " | ETA: ", round(ETA, 2), " min")
-                cli::cli_inform(c(
-                  "i" = msg
-                ))
-            }
-
-            i <- i + 1
-        }
-
-    }
-
-    cli::cli_inform(c(
-      "v" = "Downloaded {prettyunits::pretty_bytes(object.size(results)[1])}"
-    ))
-
-    if (debug) {
-        return(results)
-    }
-
-    cli::cli_inform(c(
-      "i" = "Building dataframe"
-    ))
-
-    if ("error" %in% names(results$responses[[1]])) {
-        # TODO: Add a handler for error code 416: Unable to collect data for the field 'TR.RICCode' and some specific
-        #  identifier(s)
-
-        error <- results$responses[[1]]$error[[1]]
-
-        if (error$code == 218) {
-
-            cli::cli_abort(c(
-              "No Results",
-              "x" = "The field could not be found"
-            ))
-
-        }
-
-    }
-
-
-    data <- results$responses[[1]]$data
-    #
-    # debug_msg <- results$responses[[1]]$headers[[1]]
-
-    # if (is.null(results$responses[[1]]$headers[[1]][[1]]$displayName)) {
-    #     cli::cli_abort(c(
-    #       "No Results",
-    #       "x" = "The field(s) supplied are not present in any of the instruments",
-    #       "i" = "Use the Data Item Browser (DIB) in the Eikon/Refinitiv Terminal to find fields"
-    #     ))
-    # }
-
-    tryCatch({
-        column_names <- purrr::map_chr(results$responses[[1]]$headers[[1]], ~.$displayName)
-    }, error = function(e) {
-        cli::cli_abort(c(
-          "No Results",
-          "x" = "The field(s) supplied are not present in any of the instruments",
-          "i" = "Use the Data Item Browser (DIB) in the Eikon/Refinitiv Terminal to find fields"
-        ))
-    })
-
-    data_df <- purrr::map_dfr(data, ~as.data.frame(purrr::map(., \(x) ifelse(is.null(x), NA, as.character(x))), col.names = column_names))
-
-    cli::cli_inform(c(
-      "v" = "dataframe built"
-    ))
-
-    return(data_df)
-
+    dplyr::bind_rows(res)
 }
