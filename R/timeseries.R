@@ -6,9 +6,12 @@
 #' @param interval - the interval
 #' @param start - Start date, JSON format
 #' @param end - End date, JSON format
+#' @param url - url
+#' @param app_key -
+#' @param debug
 #'
 #' @return JSON results
-ts_payload_loop <- function(directions, rics, fields, interval, start, end) {
+ts_payload_loop <- function(directions, rics, fields, interval, start, end, url, app_key, debug = FALSE) {
 
     # Builds the payload to be sent
     payload <- list(
@@ -21,7 +24,7 @@ ts_payload_loop <- function(directions, rics, fields, interval, start, end) {
 
     # Sends the direction and payload, returns the results
     json <- json_builder(directions, payload)
-    send_json_request(json)$timeseriesData
+    send_json_request(json, app_key, url, debug)$timeseriesData
 }
 
 
@@ -59,11 +62,12 @@ to_dataframe <- function(snippet) {
 #' @param startdate - Date, start date of the query
 #' @param enddate - Date, end date of the query
 #' @param interval - char, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
+#' @param debug - Boolean, debug on or off, default FALSE
 #'
 #' @return A dataframe with the data requested
 #'
 #' @export
-get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'daily') {
+get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'daily', debug = FALSE) {
 
     # Type checks
     if (!is.character(rics)) {
@@ -111,6 +115,9 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
 
     results <- list()
 
+    url <- ek_get_address()
+    app_key <- ek_get_APIKEY()
+
     for (rics in chunks_of_rics) {
         date_list <- seq_of_dates(startdate, enddate, interval, MAX_ROWS / length(rics))
         # Sends the requests divided into multiple requests that adhere to the 3000 rows limit imposed
@@ -122,7 +129,10 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
             directions = 'TimeSeries',
             interval = interval,
             start = .x,
-            end = .y
+            end = .y,
+            url = url,
+            app_key = app_key,
+            debug = debug
           )) |>
           unlist(recursive = FALSE)
 

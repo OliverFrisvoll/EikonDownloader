@@ -23,6 +23,7 @@ get_datagrid <- function(instrument, fields, debug = FALSE, MAX_ROWS = 10000L, r
     # No enforced limit for version 1.1.0 and above.
     # However, it still has a server timeout around 300 seconds.
     MAX_COMPANIES <- 7000L
+    MAX_COMPANIES <- 300L
 
     # Sets the direction
     directions <- 'DataGrid_StandardAsync'

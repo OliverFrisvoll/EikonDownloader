@@ -85,6 +85,29 @@ test_that("get_datagrid(), accepts keyword arguments", {
     .onLoad()
 })
 
+test_that("get_datagrid(), check that data equals what it should be 2498 ISINS", {
+    skip_on_cran()
+    skip_on_ci()
+    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+
+    flds <- c(
+      "TR.FRNFORMULA",
+      "TR.FICouponTypeDescription",
+      "TR.YLDMTHD",
+      "TR.FRNFLOOR",
+      "TR.FRNCAP",
+      "TR.FiIssuerId",
+      "TR.UltimateParentId",
+      "TR.FiOriginalAmountIssued"
+    )
+
+    res <- readRDS("test_data/datagrid_testdata2498_ISIN")
+    expect_equal(get_datagrid(res$Instrument, flds), res)
+
+    rm(flds, res)
+    .onLoad()
+})
+
 
 # test_that("get_datgrid(), check is empty results somewhere is accepted", {
 #     skip_on_cran()
