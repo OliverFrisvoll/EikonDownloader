@@ -58,7 +58,7 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
       startdate,
       enddate,
       api,
-      9000
+      ek_get_port()
     ) |>
       data.frame()
 

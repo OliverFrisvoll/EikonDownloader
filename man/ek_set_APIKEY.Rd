@@ -4,7 +4,7 @@
 \alias{ek_set_APIKEY}
 \title{Function to set api_key}
 \usage{
-ek_set_APIKEY(api_key = NULL)
+ek_set_APIKEY(api_key = NULL, debug = FALSE)
 }
 \arguments{
 \item{api_key}{\itemize{

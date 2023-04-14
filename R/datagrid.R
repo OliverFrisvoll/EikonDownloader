@@ -49,7 +49,7 @@ get_datagrid <- function(instrument, fields, ...) {
       fields = fields,
       param = kwargs,
       api = api,
-      9000
+      ek_get_port()
     ) |>
       data.frame()
 }
