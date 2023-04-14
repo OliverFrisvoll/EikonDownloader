@@ -15,10 +15,6 @@
 #' @export
 get_datagrid <- function(instrument, fields, ...) {
 
-    # The limit value is around 10,000 data points for version 1.0.2 and below.
-    # No enforced limit for version 1.1.0 and above.
-    # However, it still has a server timeout around 300 seconds.
-
     # Typecheck
     if (!is.character(instrument) && !is.character(fields)) {
         cli::cli_abort(c(
@@ -52,7 +48,8 @@ get_datagrid <- function(instrument, fields, ...) {
       instruments = instrument,
       fields = fields,
       param = kwargs,
-      api = api
+      api = api,
+      9000
     ) |>
       data.frame()
 }

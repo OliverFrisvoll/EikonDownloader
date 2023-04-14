@@ -19,10 +19,9 @@ fn rust_get_dg(
     fields: Vec<String>,
     param: List,
     api: String,
+    port: i16,
 ) -> List {
-    let mut con = Connection::new(api, "127.0.0.1".to_string(), 9000);
-    let port = con.query_port().expect("Can't find Refintiv");
-    con.set_port(port);
+    let mut con = Connection::new(api, "127.0.0.1".to_string(), port);
 
     let dg = Datagrid::new(con);
     let params = list_to_hm(param);
@@ -33,7 +32,7 @@ fn rust_get_dg(
         Some(params))
         .expect("Could not build DataFrame");
 
-    polars_to_r(df)
+    polars_to_r(df.unwrap())
 }
 
 #[extendr]
@@ -44,11 +43,9 @@ fn rust_get_ts(
     Start_Date: &str,
     End_Date: &str,
     api: String,
+    port: i16,
 ) -> List {
-    let mut con = Connection::new(api, "127.0.0.1".to_string(), 9000);
-    let port = con.query_port().expect("Can't find Refintiv");
-    con.set_port(port);
-
+    let mut con = Connection::new(api, "127.0.0.1".to_string(), port);
     let ts = TimeSeries::new(con);
 
     let SDate = NaiveDateTime::parse_from_str(Start_Date, "%FT%T")

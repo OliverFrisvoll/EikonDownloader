@@ -1,4 +1,5 @@
 use std::cmp::{max, min};
+use std::ptr::addr_of;
 use crate::connection::Connection;
 use chrono::prelude::*;
 use polars::error::PolarsResult;
@@ -8,6 +9,8 @@ use polars::prelude::DataType::{Datetime, Float64, Time, Utf8};
 use serde_json::{json, Value};
 use polars::series::Series;
 use crate::utils::clean_string;
+use std::sync::mpsc;
+use std::{thread, time};
 
 pub enum Frequency {
     //tick
@@ -52,7 +55,8 @@ pub struct TimeSeries {
 
 
 impl TimeSeries {
-    pub fn new(c: Connection) -> Self {
+    pub fn new(c: Connection) -> Self
+    {
         Self {
             connection: c
         }
@@ -156,26 +160,16 @@ impl TimeSeries {
         SDate: NaiveDateTime,
         EDate: NaiveDateTime,
     ) -> Result<DataFrame, String> {
-        let direction = String::from("TimeSeries");
+        let direction = "TimeSeries";
 
         // Creating the payloads
         let payloads = TimeSeries::groups(rics, fields, SDate, EDate, Frq);
 
-        // Sending payloads
-        let mut res = Vec::new();
-        for payload in payloads {
-            let val = self.connection
-                .send_request(payload, &direction)
-                .expect("Could not receive request (TimeSeries::get_timeseries)");
+        let res = self.connection.send_request_async_handler(payloads, direction)
+            .expect("Did not receive results");
 
-            if val["timeseriesData"][0]["statusCode"] == "Normal" {
-                res.push(val);
-            }
-        }
-
-        // Exit if no payload yielded results
-        if res.len() == 0 {
-            return Err(String::from("Did not receive any results"));
+        if res.is_empty() {
+            return Err("No results".to_string());
         }
 
         // Converting from json to a Polars DataFrame
@@ -196,7 +190,7 @@ impl TimeSeries {
     }
 
     fn fetch_headers(json_like: &Value) -> Result<Vec<String>, String> {
-        println!("{}", json_like);
+        // println!("{}", json_like);
         if json_like["timeseriesData"][0]["statusCode"] == "Normal" {
             let mut field_type: Vec<String> = Vec::new();
             for value in json_like["timeseriesData"][0]["fields"]
@@ -234,4 +228,3 @@ impl TimeSeries {
         DataFrame::new(res)
     }
 }
-

@@ -57,19 +57,10 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
       interval,
       startdate,
       enddate,
-      api
+      api,
+      9000
     ) |>
       data.frame()
-
-    suppressWarnings({
-        df$TIMESTAMP <- lubridate::as_datetime(df$TIMESTAMP)
-        df$HIGH <- as.numeric(df$HIGH)
-        df$CLOSE <- as.numeric(df$CLOSE)
-        df$LOW <- as.numeric(df$LOW)
-        df$OPEN <- as.numeric(df$OPEN)
-        df$COUNT <- as.numeric(df$COUNT)
-        df$VOLUME <- as.numeric(df$VOLUME)
-    })
 
     df
 }
