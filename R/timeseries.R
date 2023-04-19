@@ -51,16 +51,25 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
 
     api <- ek_get_APIKEY()
 
-    df <- rust_get_ts(
-      rics,
-      fields,
+    ret <- rust_get_ts(
+      c(rics),
+      c(fields),
       interval,
       startdate,
       enddate,
       api,
       ek_get_port()
-    ) |>
-      data.frame()
+    )
 
-    df
+    if (ret[1] == "Error") {
+        cli::cli_warn(c(
+          "Error",
+          "x" = "{ret[2]}"
+        ))
+    } else if (length(names(ret)) > 0) {
+        data.frame(ret)
+    } else {
+        ret
+    }
+
 }

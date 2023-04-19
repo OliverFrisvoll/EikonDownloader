@@ -1,6 +1,25 @@
 use serde_json::{json, Value};
-use reqwest::blocking::Response;
-use std::{thread, time};
+use std::{fmt, thread, time};
+use std::future::Future;
+use tokio::runtime::Runtime;
+use tokio::task::{JoinHandle};
+use crate::utils::{EkError};
+use log::{info, error, debug, trace, warn};
+
+#[derive(Copy, Clone)]
+pub enum Direction {
+    Datagrid,
+    TimeSeries,
+}
+
+impl fmt::Display for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Direction::Datagrid => write!(f, "DataGrid_StandardAsync"),
+            Direction::TimeSeries => write!(f, "TimeSeries")
+        }
+    }
+}
 
 pub struct Connection {
     app_key: String,
@@ -29,7 +48,7 @@ impl Connection {
 
     pub fn set_port(&mut self, port: i16) { self.port = port }
 
-    pub fn status(&self, port: &i16) -> reqwest::Result<Response> {
+    pub fn status(&self, port: &i16) -> reqwest::Result<reqwest::blocking::Response> {
         let address = format!("{}:{}/api/status", self.get_url(), port);
         let client = reqwest::blocking::Client::new();
         client.get(address)
@@ -37,192 +56,174 @@ impl Connection {
             .send()
     }
 
-    pub fn handshake(&self) -> serde_json::Value {
-        // http://127.0.0.1:9000/api/handshake
-        // headers = {'Content-Type': 'application/json', 'x-tr-applicationid': 'f63dab2c283546a187cd6c59894749a2228ce486'}
+    pub fn handshake(&self) -> Result<Value, EkError> {
         let address = format!("{}/api/handshake", self.get_address());
-
         let app_key = self.get_app_key();
-        println!("{}", address);
-
-
-        let json_body = json!({
-            "AppKey": app_key,
-            "AppScope": "trapi",
-            "ApiVersion": "1"
-        });
-
+        let json_body = json!({"AppKey": app_key,"AppScope": "trapi","ApiVersion": "1"});
         let client = reqwest::blocking::Client::new();
-        client.post(address)
+        match client.post(address)
             .header("CONTENT-TYPE", "application/json")
             .header("x-tr-applicationid", app_key)
             .body(json_body.to_string())
-            .send()
-            .expect("Could not handshake")
-            .json()
-            .expect("Could not parse as JSON")
-    }
-
-
-    pub fn send_request(
-        &self,
-        payload: Value,
-        direction: &String,
-    ) -> reqwest::Result<Value> {
-        #[derive(serde::Serialize)]
-        struct FullRequest {
-            Entity: Entity,
-        }
-
-        #[derive(serde::Serialize)]
-        struct Entity {
-            E: String,
-            W: serde_json::Value,
-        }
-
-        let json_body = FullRequest {
-            Entity: Entity {
-                E: direction.to_owned(),
-                W: payload,
-            }
-        };
-
-        let app_key = self.get_app_key();
-
-        let client = reqwest::blocking::Client::new();
-        return match client
-            .post(format!("{}/api/v1/data", self.get_address()))
-            .header("CONTENT_TYPE", "application/json")
-            .header("x-tr-applicationid", app_key)
-            .json(&json_body)
             .send() {
-            Ok(r) => { r.json() }
-            Err(e) => { Err(e) }
-        };
+            Err(e) => Err(EkError::ConnectionError(e.to_string())),
+            Ok(r) => {
+                match r.json() {
+                    Err(e) => Err(EkError::NoData(e.to_string())),
+                    Ok(r) => {
+                        debug!("Handshake: {:?}", r);
+                        Ok(r)
+                    }
+                }
+            }
+        }
     }
 
-    pub fn send_request_async_handler(&self, payloads: Vec<Value>, direction: &str) -> Result<Vec<Value>, String> {
-        let rt = tokio::runtime::Builder::new_multi_thread()
+    pub fn send_request_async_handler(&self, payloads: Vec<Value>, direction: Direction) -> Result<Vec<Value>, EkError> {
+        let rt = match tokio::runtime::Builder::new_multi_thread()
             .worker_threads(12)
             .enable_all()
-            .build()
-            .unwrap();
+            .build() {
+            Ok(r) => r,
+            Err(e) => return Err(EkError::ThreadError(e.to_string()))
+        };
 
         let app_key = self.get_app_key();
         let address = self.get_address();
+        let handshake = self.handshake()?;
+        let access_token = Connection::bearer(handshake)?;
+
         let delay = time::Duration::from_millis(250);
-        let payload_len = payloads.len();
 
         let mut handles = Vec::with_capacity(payloads.len());
-        let mut res = Vec::new();
 
         for payload in payloads {
             thread::sleep(delay);
-            handles.push(rt.spawn(Connection::send_request_async(
-                payload,
-                direction.to_owned(),
-                address.to_owned(),
-                app_key.to_owned(),
-            )))
+            handles.push(rt.spawn(
+                Connection::send_request_async(
+                    payload,
+                    direction.clone(),
+                    address.to_owned(),
+                    app_key.to_owned(),
+                    access_token.to_owned())))
         }
 
+        let res = Connection::join_handles(handles, &rt)?;
+        return Ok(res);
+    }
 
+    fn join_handles(handles: Vec<JoinHandle<Result<Option<Value>, EkError>>>, rt: &Runtime) -> Result<Vec<Value>, EkError> {
+        let mut res = Vec::new();
         for handle in handles {
-            match rt.block_on(handle).expect("Could not block thread") {
-                Some(r) => { res.push(r) }
-                None => {}
+            match rt.block_on(handle) {
+                Ok(r) => {
+                    match r {
+                        Ok(opt) => {
+                            match opt {
+                                Some(v) => { res.push(v) }
+                                None => {}
+                            }
+                        }
+                        Err(e) => { return Err(e); }
+                    }
+                }
+                Err(e) => { return Err(EkError::ThreadError(e.to_string())); }
             }
         }
+        Ok(res)
+    }
 
-        println!("Returned requests: {} of {}", res.len(), payload_len);
 
-        return Ok(res);
+    pub fn bearer(hk: Value) -> Result<String, EkError> {
+        match hk.get("access_token") {
+            None => { Err(EkError::AuthError("Cannot get bearer access token".to_string())) }
+            Some(r) => { Ok(format!("Bearer {}", r.to_string())) }
+        }
+    }
+
+
+    pub fn req_client(json_body: &Value, address: &str, app_key: &str, access_token: Option<&str>) -> reqwest::RequestBuilder {
+        let client = reqwest::Client::new();
+        let mut build = client.post(format!("{}/api/v1/data", address))
+            .header("CONTENT_TYPE", "application/json")
+            .header("x-tr-applicationid", app_key)
+            .json(json_body);
+
+        match access_token {
+            None => build,
+            Some(r) => build.header("Authorization", r)
+        }
+    }
+
+    pub fn entity_assembler(payload: &Value, direction: &Direction) -> Value {
+        let dir = direction.to_string();
+        json!({"Entity": {"E": dir,"W": payload}})
+    }
+
+    pub async fn request_executioner(req: reqwest::RequestBuilder) -> Result<Value, EkError> {
+        return match req.send().await {
+            Ok(r) => {
+                match r.json::<Value>().await {
+                    Ok(r) => Ok(r),
+                    Err(e) => Err(EkError::NoData(e.to_string()))
+                }
+            }
+            Err(e) => Err(EkError::ConnectionError(e.to_string()))
+        };
     }
 
     pub async fn send_request_async(
         payload: Value,
-        direction: String,
+        direction: Direction,
         address: String,
         app_key: String,
-    ) -> Option<Value> {
-        #[derive(serde::Serialize)]
-        struct FullRequest {
-            Entity: Entity,
-        }
+        access_token: String,
+    ) -> Result<Option<Value>, EkError> {
+        let body = Connection::entity_assembler(&payload, &direction);
 
-        #[derive(serde::Serialize)]
-        struct Entity {
-            E: String,
-            W: Value,
-        }
+        loop {
+            let req: reqwest::RequestBuilder = Connection::req_client(&body, &address, &app_key, Some(&access_token));
+            let json_res = match Connection::request_executioner(req).await {
+                Ok(r) => r,
+                Err(e) => return Err(e)
+            };
 
-        let json_body = FullRequest {
-            Entity: Entity {
-                E: direction.to_owned(),
-                W: payload.to_owned(),
-            }
-        };
-
-
-        let client = reqwest::Client::new();
-        match client
-            .post(format!("{}/api/v1/data", address))
-            .header("CONTENT_TYPE", "application/json")
-            .header("x-tr-applicationid", app_key)
-            .json(&json_body)
-            .send()
-            .await {
-            Ok(v) => {
-                match v.json::<Value>().await {
-                    Ok(r) => {
-
-                        // Me trying to catch if the request was successful
-                        match r.get("timeseriesData") {
-                            // If timeseries
-                            Some(v) => {
-                                let statuscode: &Value = &v[0]["statusCode"];
-                                if statuscode == "Normal" {
-                                    Some(r)
-                                } else {
-                                    // println!("Error: {}", &v);
-                                    None
-                                }
+            match direction {
+                Direction::Datagrid => {
+                    match json_res.get("responses") {
+                        Some(r) => {
+                            match r[0].get("ticket") {
+                                None => return Ok(Some(json_res)),
+                                Some(ticket) => { Connection::ticket_req(ticket, &direction, &address, &app_key); }
                             }
-                            // If datagrid
-                            None => {
-                                match r.get("responses") {
-                                    None => { None }
-                                    Some(v) => {
-                                        match v[0].get("data") {
-                                            None => { None }
-                                            Some(_) => { Some(r) }
-                                        }
+                        }
+                        None => {
+                            match json_res.get("ErrorCode") {
+                                None => return Ok(None),
+                                Some(ErrorCode) => {
+                                    match ErrorCode.as_u64().unwrap() {
+                                        2504u64 | 500u64 | 400u64 => {}
+                                        _ => return Err(EkError::Error(format!("{}: {}", ErrorCode, json_res["ErrorMessage"])))
                                     }
                                 }
                             }
                         }
                     }
-                    Err(e) => {
-                        None
-                    }
                 }
-            }
-            Err(e) => {
-                None
+                Direction::TimeSeries => return Ok(Some(json_res))
             }
         }
     }
 
-    pub fn query_port(&self) -> Result<i16, ()> {
-        for port in 9000..9010i16 {
-            println!("Trying {}", port);
-
-            match self.status(&port) {
-                Ok(p) => { return Ok(port); }
-                Err(e) => { continue; }
-            }
-        }
-        return Err(());
+    pub async fn ticket_req(ticket: &Value, direction: &Direction, address: &str, app_key: &str) -> Result<Value, EkError> {
+        let payload = json!({"requests" : [{"ticket" : ticket}]});
+        let body = Connection::entity_assembler(&payload, &direction);
+        let req = Connection::req_client(&body, address, app_key, None);
+        Connection::request_executioner(req).await
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+}

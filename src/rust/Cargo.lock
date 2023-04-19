@@ -9,6 +9,7 @@ dependencies = [
  "chrono",
  "extendr-api",
  "futures",
+ "log",
  "polars",
  "reqwest",
  "serde",

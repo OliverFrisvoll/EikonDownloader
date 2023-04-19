@@ -9,11 +9,14 @@
 #' @param fields - Vector of Char, fields to request from the datagrid
 #' @param ... - List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
 #' daily data (Frq) with a given start (SDate) and end date (EDate)
+#' @param settings - List of bool settings, possibilities:
+#'     raw : If the function should return the raw json (default false)
+#'     field_name : if the function should return the field names (default false)
 #'
 #' @return dataframe of the information requested
 #'
 #' @export
-get_datagrid <- function(instrument, fields, ...) {
+get_datagrid <- function(instrument, fields, ..., settings = list(raw = FALSE)) {
 
     # Typecheck
     if (!is.character(instrument) && !is.character(fields)) {
@@ -38,19 +41,31 @@ get_datagrid <- function(instrument, fields, ...) {
 
     if (length(kwargs) == 0) {
         kwargs <- list(
-          "Frq" = "D"
+          Frq = "D"
         )
     }
 
-    api <- ek_get_APIKEY()
 
-    rust_get_dg(
-      instruments = instrument,
-      fields = fields,
+    api <- ek_get_APIKEY()
+    ret <- rust_get_dg(
+      instruments = c(instrument),
+      fields = c(fields),
       param = kwargs,
+      settings = settings,
       api = api,
       ek_get_port()
-    ) |>
-      data.frame()
+    )
+
+    if (ret[1] == "Error") {
+        cli::cli_warn(c(
+          "Error",
+          "x" = "{ret[2]}"
+        ))
+    } else if (length(names(ret)) > 0) {
+        data.frame(ret)
+    } else {
+        ret
+    }
+
 }
 
