@@ -10,6 +10,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.path = "man/figures/README-",
   out.width = "100%"
+
 )
 ```
 
@@ -20,22 +21,26 @@ knitr::opts_chunk$set(
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-The goal of EikonDownloader is to allow the user to download timeseries and datagrid data from the Eikon platform using purely the R programming language.
+The goal of EikonDownloader is to allow the user to download timeseries and datagrid data from the Eikon platform using the R programming language.
 
 ## Installation
 
 You can install the development version of EikonDownloader from [GitHub](https://github.com/) with:
+Currently the only compiled version of the package is for Windows, but the source code can be downloaded and compiled for other operating systems.
+```{r, eval = FALSE}
 
-``` r
-# install.packages("devtools")
-devtools::install_github("OliverFrisvoll/EikonDownloader")
+install.packages(
+  "https://github.com/OliverFrisvoll/EikonDownloader/releases/latest/download/EikonDownloader.zip",
+  repos = NULL
+)
+
 ```
 
 
 To be able to use the tool there are a couple of things that needs to be in order
 
 1. Open the Refinitiv Workspace, this program has to be running during every request. It can be minimized and closed down, it will work as long as this program is running in the background while you download.
-2. You need to create an Api key to be able to use the tool. This is done by typing "Api Key Generator" in the address bar of the Refinitiv application. At the very top of that page you can Register an application. Type in a display name and check the "Eikon Data API" checkbox. When you click "Register New App" an entry should show up further down with the application name and an Api Key, this key is the Api key used in for the tool.
+2. You need to create an Api key to be able to use the tool. This is done by typing "APPKEY" in the address bar of the Refinitiv application. At the very top of that page you can Register an application. Type in a display name and check the "Eikon Data API" checkbox. When you click "Register New App" an entry should show up further down with the application name and an Api Key, this key is the Api key used in for the tool.
 
 
 ## Example
@@ -43,16 +48,20 @@ To be able to use the tool there are a couple of things that needs to be in orde
 ### Setting API Key
 To set the Api key you simply have to load the library and run the set api key function.
 
+```{r, include = FALSE }
+load("api_key.RData")
+```
+
 ```{r }
 library(EikonDownloader)
 
 # Setting the api_key, switch out this key with your own key from the Refinitiv Workspace
-ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+ek_set_APIKEY(api_key)
 
 ```
 
 ### get_datagrid()
-Examples of how to fetch data from the datagrid using CUSIP id's
+Examples of how to fetch data from the datagrid
 
 ```{r get_datagrid}
 
@@ -65,9 +74,40 @@ df <- get_datagrid(
 )
 
 head(df)
+
+# Time data from get_datagrid
+df <- get_datagrid(
+  instrument = c("AAPL.O", "TSLA.O"),
+  fields = c('TR.CLOSE', 'TR.ASKPRICE', 'TR.BIDPRICE', 'TR.CLOSE.DATE'),
+  SDate = "2022-01-03",
+  EDate = "2022-01-05"
+)
+head(df)
+
+# Time data from get_datagrid with currency conversion
+df <- get_datagrid(
+  instrument = c("AAPL.O", "TSLA.O"),
+  fields = c('TR.CLOSE', 'TR.ASKPRICE', 'TR.BIDPRICE', 'TR.CLOSE.DATE'),
+  SDate = "2022-01-03",
+  EDate = "2022-01-05",
+  curn = "JPY"
+)
+head(df)
+
+# Can pass dates as Date objects
+df <- get_datagrid(
+  instrument = c("AAPL.O", "TSLA.O"),
+  fields = c('TR.CLOSE', 'TR.CLOSE.DATE'),
+  SDate = as.Date("2022-01-03"),
+  EDate = as.Date("2022-01-05")
+)
+head(df)
+
+
+
 ```
 
-Other fields can be found using the Refinitiv platform, there is usually a question mark next to the field name that shows what it is called.
+Other fields can be found using the data item browser (DIB) application. This application can be found in the Refinitiv Workspace.
 
 ### get_timeseries()
 This is a function that can be used to fetch timeseries data using RIC id's
@@ -81,25 +121,23 @@ df <- get_timeseries(
   startdate = as.Date("2021-03-01"),
   enddate = as.Date("2021-03-10")
 )
-
 head(df)
 
-```
-
-### fetch_timeseries()
-This is a wrapper around get_timeseries that takes CUSIP as a parameter instead of RIC
-
-```{r timeseries CUSIP}
-
-CUSIPS <- c('88160R101', '594918104')
-
-df <- fetch_timeseries(
-  CUSIP = CUSIPS,
-  start_date = as.Date("2021-03-01"),
-  end_date = as.Date("2021-03-10")
+# Minutely data
+df <- get_timeseries(
+  rics = RICS,
+  startdate = as.Date("2022-08-03"),
+  enddate = as.Date("2022-08-05"),
+  interval = "minute"
 )
-
 head(df)
 
-```
+# EndDate is optional
+df <- get_timeseries(
+  rics = RICS,
+  startdate = as.Date("2023-03-03")
+)
+head(df)
 
+
+```

@@ -36,8 +36,28 @@ get_datagrid <- function(instrument, fields, ..., settings = list(raw = FALSE)) 
         ))
     }
 
+    if (!is.list(settings)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "settings is not of type list"
+        ))
+    }
+
     # Fetches the keyword arguments
     kwargs <- list(...)
+
+    if (exists("SDate", kwargs)) {
+        if (lubridate::is.Date(kwargs$SDate)) {
+            kwargs$SDate <- lubridate::format_ISO8601(kwargs$SDate)
+        }
+    }
+
+    if (exists("EDate", kwargs)) {
+        if (lubridate::is.Date(kwargs$EDate)) {
+            kwargs$EDate <- lubridate::format_ISO8601(kwargs$EDate)
+        }
+    }
+
 
     if (length(kwargs) == 0) {
         kwargs <- list(
@@ -62,8 +82,8 @@ get_datagrid <- function(instrument, fields, ..., settings = list(raw = FALSE)) 
           "x" = "{ret[2]}"
         ))
     } else if (length(names(ret)) > 0) {
-        data.frame(ret) %>%
-          dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "null")))
+        # Would be better with a non dplyr solution, but here we are
+        dplyr::mutate(data.frame(ret), dplyr::across(where(is.character), ~dplyr::na_if(., "null")))
     } else {
         ret
     }

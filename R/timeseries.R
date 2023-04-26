@@ -13,7 +13,7 @@
 #'
 #' @export
 #'
-get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'daily') {
+get_timeseries <- function(rics, fields = '*', startdate, enddate = NULL, interval = 'daily') {
 
     # Type checks
     if (!is.character(rics)) {
@@ -28,12 +28,20 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
           "x" = "fields is not of type char"
         ))
     }
-    if (!lubridate::is.Date(startdate) || !lubridate::is.Date(enddate)) {
+    if (!lubridate::is.Date(startdate)) {
         cli::cli_abort(c(
           "ValueError",
-          "x" = "date is not of type Date"
+          "x" = "startdate is not of type Date"
         ))
     }
+    if (!is.null(enddate) && !lubridate::is.Date(enddate)) {
+        cli::cli_abort(c(
+          "ValueError",
+          "x" = "enddate is not of type Date"
+        ))
+    }
+
+
     if (!is.character(interval)) {
         cli::cli_abort(c(
           "ValueError",
@@ -47,6 +55,9 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
     # 2020-01-01T00:00:00
     # Convert startdate to iso8601
     startdate <- paste0(lubridate::format_ISO8601(startdate), "T00:00:00")
+    if (is.null(enddate)) {
+        enddate <- Sys.Date()
+    }
     enddate <- paste0(lubridate::format_ISO8601(enddate), "T00:00:00")
 
     api <- ek_get_APIKEY()
@@ -67,8 +78,8 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
           "x" = "{ret[2]}"
         ))
     } else if (length(names(ret)) > 0) {
-        data.frame(ret) %>%
-          dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "null")))
+        # Would be better with a non dplyr solution, but here we are
+        dplyr::mutate(data.frame(ret), dplyr::across(where(is.character), ~dplyr::na_if(., "null")))
     } else {
         ret
     }

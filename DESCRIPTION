@@ -3,7 +3,7 @@ Title: Eikon API Downloader
 Version: 0.0.1.1104
 Authors@R: 
     person("Oliver Collargol", "Frisvoll", , "ocfris97@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0009-0006-7923-576X"))
 Description: This package aims to give the user the ability to download the data they require from the Eikon API.
 License: MIT + file LICENSE
 Encoding: UTF-8
