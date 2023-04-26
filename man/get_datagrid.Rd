@@ -4,7 +4,7 @@
 \alias{get_datagrid}
 \title{Fetching information from the datagrid}
 \usage{
-get_datagrid(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, ...)
+get_datagrid(instrument, fields, ..., settings = list(raw = FALSE))
 }
 \arguments{
 \item{instrument}{\itemize{
@@ -15,17 +15,15 @@ get_datagrid(instrument, fields, debug = FALSE, MAX_ROWS = 50000L, ...)
 \item Vector of Char, fields to request from the datagrid
 }}
 
-\item{debug}{\itemize{
-\item if it should just return the json results, default FALSE
-}}
-
-\item{MAX_ROWS}{\itemize{
-\item Max amount of rows to send with each payload, default 10000L
-}}
-
 \item{...}{\itemize{
 \item List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
 daily data (Frq) with a given start (SDate) and end date (EDate)
+}}
+
+\item{settings}{\itemize{
+\item List of bool settings, possibilities:
+raw : If the function should return the raw json (default false)
+field_name : if the function should return the field names (default false)
 }}
 }
 \value{

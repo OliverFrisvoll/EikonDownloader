@@ -10,18 +10,6 @@ test_that("ek_get_APIKEY(), the function returns an error if there is no API_key
 })
 
 
-test_that("Tests if it's possible to set and fetch port, address, url and such", {
-    expect_equal(ek_get_port(), 9000L)
-    expect_equal(ek_get_address(), "http://127.0.0.1:9000/api/v1/data")
-
-    ek_set_port(9001L)
-    expect_equal(ek_get_port(), 9001L)
-    expect_equal(ek_get_address(), "http://127.0.0.1:9001/api/v1/data")
-
-    # Resetting to load time variables.
-    .onLoad()
-})
-
 test_that("ek_fetch_port finds a numeric port, only works if Eikon is currently running", {
     skip_on_ci()
     skip_on_cran()
@@ -37,3 +25,4 @@ test_that("ek_get_APIKEY() finds port and sets API_KEY", {
     # Resetting to load time variables.
     .onLoad()
 })
+

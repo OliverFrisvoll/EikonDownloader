@@ -3,7 +3,6 @@
 export(ek_get_port)
 export(ek_set_APIKEY)
 export(ek_set_port)
-export(fetch_timeseries)
 export(get_datagrid)
 export(get_timeseries)
-export(send_json_request)
+useDynLib(EikonDownloader, .registration = TRUE)

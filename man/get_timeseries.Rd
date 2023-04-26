@@ -4,7 +4,13 @@
 \alias{get_timeseries}
 \title{Get timeseries data from Eikon using RIC as identifier}
 \usage{
-get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
+get_timeseries(
+  rics,
+  fields = "*",
+  startdate,
+  enddate = NULL,
+  interval = "daily"
+)
 }
 \arguments{
 \item{rics}{\itemize{
@@ -12,7 +18,7 @@ get_timeseries(rics, fields = "*", startdate, enddate, interval = "daily")
 }}
 
 \item{fields}{\itemize{
-\item Fields to return, can be found on the Refinitiv Workspace
+\item Fields to return, can be found on Refinitiv Workspace
 }}
 
 \item{startdate}{\itemize{

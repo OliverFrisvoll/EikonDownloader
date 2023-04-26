@@ -176,4 +176,3 @@ ek_fetch_port <- function(debug = FALSE) {
     }
     port
 }
-

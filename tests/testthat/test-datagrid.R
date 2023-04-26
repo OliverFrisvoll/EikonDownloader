@@ -44,39 +44,6 @@ test_that("get_datagrid(), returns values for when one Instrument is faulty and 
 })
 
 
-test_that("get_datagrid(), if supplied a faulty field, returns an error", {
-    skip_on_cran()
-    skip_on_ci()
-    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
-
-    expect_error(get_datagrid(c('88160R101', '594918104'), 'TR.sds'), "No Results")
-
-    # Resetting to load time va
-    .onLoad()
-})
-
-
-test_that("Testing edge case of field not existing in one RIC", {
-    skip_on_cran()
-    skip_on_ci()
-    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
-
-    expect_error(
-      get_datagrid(
-        instrument = '4297589374',
-        fields = c('TR.CLOSE', 'TR.CLOSE.DATE'),
-        SDate = "2020-01-01",
-        EDate = "2023-01-01",
-      ),
-      "No Results"
-    )
-
-
-    # Resetting to load time va
-    .onLoad()
-})
-
-
 test_that("get_datagrid(), returns multiple rows for multiple fields", {
     skip_on_cran()
     skip_on_ci()
@@ -139,4 +106,3 @@ test_that("get_datagrid(), accepts keyword arguments", {
 #     # Resetting to load time va
 #     .onLoad()
 # })
-

@@ -40,4 +40,3 @@ test_that("get_timeseries(), returns error on faulty types", {
     ), "interval")
 
 })
-
