@@ -31,7 +31,8 @@ Currently the only compiled version of the package is for Windows, but the sourc
 
 install.packages(
   "https://github.com/OliverFrisvoll/EikonDownloader/releases/latest/download/EikonDownloader.zip",
-  repos = NULL
+  repos = NULL,
+  binary = TRUE
 )
 
 ```

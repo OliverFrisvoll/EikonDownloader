@@ -10,6 +10,10 @@ ek_set_APIKEY(api_key = NULL, debug = FALSE)
 \item{api_key}{\itemize{
 \item The api_key to be used
 }}
+
+\item{debug}{\itemize{
+\item If TRUE, prints debug messages
+}}
 }
 \description{
 Function to set api_key

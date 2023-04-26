@@ -6,6 +6,11 @@
 \usage{
 ek_get_status(port)
 }
+\arguments{
+\item{port}{\itemize{
+\item The port to check status on
+}}
+}
 \description{
 Check status
 }

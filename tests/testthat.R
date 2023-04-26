@@ -9,6 +9,4 @@
 library(testthat)
 library(EikonDownloader)
 
-load("../api_key.RData")
-
 test_check("EikonDownloader")

@@ -1,6 +1,7 @@
 #' Function to set api_key
 #'
 #' @param api_key - The api_key to be used
+#' @param debug - If TRUE, prints debug messages
 #'
 #' @export
 ek_set_APIKEY <- function(api_key = NULL, debug = FALSE) {
@@ -55,6 +56,8 @@ ek_get_port <- function() {
 }
 
 #' Check status
+#'
+#' @param port - The port to check status on
 ek_get_status <- function(port) {
     address <- paste0(.pkgglobalenv$ek$base_url, ":", port, "/api/status")
     status <- tryCatch({
@@ -94,6 +97,8 @@ ek_get_address <- function() {
 }
 
 #' Fetches Eikon port from file
+#'
+#' @param debug - If TRUE, prints debug messages
 ek_fetch_port <- function(debug = FALSE) {
     port <- NULL
     app_names <- c("Data API Proxy", "Eikon API proxy", "Eikon Scripting Proxy")

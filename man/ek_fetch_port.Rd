@@ -6,6 +6,11 @@
 \usage{
 ek_fetch_port(debug = FALSE)
 }
+\arguments{
+\item{debug}{\itemize{
+\item If TRUE, prints debug messages
+}}
+}
 \description{
 Fetches Eikon port from file
 }
