@@ -62,7 +62,8 @@ get_datagrid <- function(instrument, fields, ..., settings = list(raw = FALSE)) 
           "x" = "{ret[2]}"
         ))
     } else if (length(names(ret)) > 0) {
-        data.frame(ret)
+        data.frame(ret) %>%
+          dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "null")))
     } else {
         ret
     }

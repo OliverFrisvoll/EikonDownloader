@@ -67,7 +67,8 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate, interval = 'd
           "x" = "{ret[2]}"
         ))
     } else if (length(names(ret)) > 0) {
-        data.frame(ret)
+        data.frame(ret) %>%
+          dplyr::mutate(dplyr::across(where(is.character), ~dplyr::na_if(., "null")))
     } else {
         ret
     }

@@ -1,5 +1,5 @@
 use crate::connection::{Connection, Direction};
-use crate::utils::{clean_string, EkResults, EkError};
+use crate::utils::{clean_string, EkResults, EkError, vstack_diag};
 use chrono::prelude::*;
 use polars::error::PolarsResult;
 use polars::frame::DataFrame;
@@ -22,13 +22,13 @@ pub enum Interval {
 impl Interval {
     fn as_str(&self) -> &'static str {
         match self {
-            Interval::Minute => { "minute" }
-            Interval::Hour => { "hour" }
-            Interval::Daily => { "daily" }
-            Interval::Weekly => { "weekly" }
-            Interval::Monthly => { "monthly" }
-            Interval::Quarterly => { "quarterly" }
-            Interval::Yearly => { "yearly" }
+            Interval::Minute => "minute",
+            Interval::Hour => "hour",
+            Interval::Daily => "daily",
+            Interval::Weekly => "weekly",
+            Interval::Monthly => "monthly",
+            Interval::Quarterly => "quarterly",
+            Interval::Yearly => "yearly",
         }
     }
     pub fn new(v: &str) -> Interval {
@@ -97,13 +97,28 @@ impl TimeSeries {
 
         for (i, n_df) in df_vec.into_iter().enumerate() {
             if i != 0 {
-                df = match df.vstack(&n_df) {
-                    Ok(r) => r,
-                    Err(e) => return EkResults::Err(EkError::NoDataFrame(e.to_string()))
-                };
+                if n_df.shape().1 < df.shape().1 {
+                    df = match vstack_diag(&df, n_df) {
+                        Ok(r) => r,
+                        Err(e) => return EkResults::Err(e),
+                    };
+                } else if n_df.shape().1 > df.shape().1 {
+                    df = match vstack_diag(&n_df, df) {
+                        Ok(r) => r,
+                        Err(e) => return EkResults::Err(e),
+                    };
+                } else {
+                    let n_df_ordered = match n_df.select(df.get_column_names()) {
+                        Ok(r) => r,
+                        Err(e) => return EkResults::Err(EkError::Error(e.to_string()))
+                    };
+                    df = match df.vstack(&n_df_ordered) {
+                        Ok(r) => r,
+                        Err(e) => return EkResults::Err(EkError::Error(e.to_string()))
+                    };
+                }
             }
         }
-
         EkResults::DF(df)
     }
 }
@@ -229,7 +244,10 @@ fn to_dataframe(json_like: Value) -> Result<Option<DataFrame>, EkError> {
     let mut found = false;
     let mut headers: Vec<String> = Vec::new();
 
-    for request in json_like["timeseriesData"].as_array().unwrap() {
+    for request in match json_like["timeseriesData"].as_array() {
+        None => return Err(EkError::Error("Could not turn tsData into array".to_string())),
+        Some(r) => r
+    } {
         match fetch_headers(request) {
             None => continue,
             Some(r) => {
@@ -282,4 +300,3 @@ fn to_dataframe(json_like: Value) -> Result<Option<DataFrame>, EkError> {
         Err(e) => { Err(EkError::NoDataFrame("Could not parse as Polars df".to_string())) }
     }
 }
-

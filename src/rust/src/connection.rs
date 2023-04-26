@@ -201,9 +201,12 @@ impl Connection {
                             match json_res.get("ErrorCode") {
                                 None => return Ok(None),
                                 Some(ErrorCode) => {
-                                    match ErrorCode.as_u64().unwrap() {
-                                        2504u64 | 500u64 | 400u64 => {}
-                                        _ => return Err(EkError::Error(format!("{}: {}", ErrorCode, json_res["ErrorMessage"])))
+                                    match ErrorCode.as_u64() {
+                                        None => return Err(EkError::Error(format!("Could not parse as Error Code as u64, {}: {}", ErrorCode, json_res["ErrorMessage"]))),
+                                        Some(e) => match e {
+                                            2504u64 | 500u64 | 400u64 => {}
+                                            _ => return Err(EkError::Error(format!("{}: {}", ErrorCode, json_res["ErrorMessage"])))
+                                        }
                                     }
                                 }
                             }
