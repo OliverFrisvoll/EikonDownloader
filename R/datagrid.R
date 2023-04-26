@@ -58,7 +58,6 @@ get_datagrid <- function(instrument, fields, ..., settings = list(raw = FALSE)) 
         }
     }
 
-
     if (length(kwargs) == 0) {
         kwargs <- list(
           Frq = "D"
