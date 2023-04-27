@@ -16,5 +16,7 @@ ek_set_APIKEY(api_key = NULL, debug = FALSE)
 }}
 }
 \description{
-Function to set api_key
+This function is used to set the app_key to be used in the package. To get an app_key you need to have the Eikon
+desktop app or the newer Refinitiv terminal installed. You can then get an app_key from the app by typing in
+appkey in the search field and then creating a new app_key.
 }

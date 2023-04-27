@@ -18,19 +18,21 @@ get_timeseries(
 }}
 
 \item{fields}{\itemize{
-\item Fields to return, can be found on Refinitiv Workspace
+\item Fields to return, by default all fields are returned these field are different from the datagrid
+fields
 }}
 
 \item{startdate}{\itemize{
-\item Date, start date of the query
+\item Date, start date of the query as a date object (required)
 }}
 
 \item{enddate}{\itemize{
-\item Date, end date of the query
+\item Date, end date of the query as a date object (optional, if not supplied, todays date is used)
 }}
 
 \item{interval}{\itemize{
-\item char, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
+\item char, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly) not all
+data is available for all intervals. For instance minute and hour data is only available one year back
 }}
 }
 \value{

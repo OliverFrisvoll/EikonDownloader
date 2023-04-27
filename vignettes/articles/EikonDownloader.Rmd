@@ -1,10 +1,6 @@
 ---
-title: "Userguide"
-output: rmarkdown::html_vignette
-vignette: >
-    %\VignetteIndexEntry{my-vignette}
-    %\VignetteEngine{knitr::rmarkdown}
-    %\VignetteEncoding{UTF-8}
+title: "EikonDownloader"
+
 ---
 
 Created for version 0.0.1.1105 of EikonDownloader
@@ -143,9 +139,6 @@ df$TR.CLOSE.DATE <- df$TR.CLOSE.DATE |>
   as.Date()
 head(df)
 ```
-
-
-
 We can also pass in other arguments, like for instance curn to get the date in a different currency.
 ```{r dgtimeseries_curn, render=lemon_print}
 
@@ -207,4 +200,3 @@ df$TIMESTAMP <- df$TIMESTAMP |>
 
 head(df, 10)
 ```
-

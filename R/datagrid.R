@@ -8,6 +8,11 @@
 #' get from the Eikon desktop app or the newer Refinitiv terminal. The function will then fetch the information
 #' from the Eikon datagrid and return it as a dataframe. The desktop app needs to be running for this to work.
 #'
+#' Error messages are passed from Rust (unless of course the issue is R type releated, then it is catched
+#' directly in this function), if the error message displayed is along the line of "... panicked" this means you have
+#' gotten an error I did not expect at all and you should file an issue with reproducible code and the error message
+#' at github.com/OliverFrisvoll/EikonDownloader/issues
+#'
 #' @param instrument - Vector of Char, can be CUSIP, PERMID, rics any identifer that the Eikon can handle
 #' @param fields - Vector of Char, fields to request from the datagrid
 #' @param ... - List of named parameters, could be 'SDate' = '2021-07-01', 'EDate' = '2021-09-28', 'Frq' = 'D' for
@@ -21,11 +26,6 @@
 #' @return dataframe or a list of raw data. At the moment i do not parse any column to a specific type, so all
 #' columns are of type character. This is something I might change in the future, but only if i find a robust way
 #' of doing this.
-#'
-#' @error Error messages are passed from Rust (unless of course the issue is R type releated, then it is catched
-#' directly in this function), if the error message displayed is along the line of "... panicked" this means you have
-#' gotten an error I did not expect at all and you should file an issue with reproducible code and the error message
-#' at github.com/OliverFrisvoll/EikonDownloader/issues
 #'
 #' @export
 get_datagrid <- function(instrument, fields, ..., settings = list(raw = FALSE)) {
