@@ -90,19 +90,6 @@ test_that("get_datagrid(), accepts keyword arguments", {
 })
 
 
-# test_that("get_datgrid(), invalid APP_KEY", {
-#     # Could run on cran, but wouldn't be able to test the error
-#     skip_on_cran()
-#     skip_on_ci()
-#     # load("test_data/app_key.RData")
-#     # ek_set_APIKEY(app_key)
-#     ek_set_APIKEY("INVALID_KEY")
-#     expect_error(get_datagrid("MSFT.O", "TR.TRESGScore"), "Error")
-#
-#     # Resetting to load time va
-#     .onLoad()
-# })
-
 
 test_that("get_datgrid(), passing date object", {
     skip_on_cran()
@@ -125,6 +112,8 @@ test_that("get_datgrid(), passing date object", {
 
 
 test_that("get_datgrid(), something that is not a list to settings", {
+    skip_on_cran()
+    skip_on_ci()
     load("test_data/app_key.RData")
     ek_set_APIKEY(app_key)
 
