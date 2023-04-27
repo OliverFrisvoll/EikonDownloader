@@ -55,6 +55,8 @@ get_datagrid <- function(instrument, fields, ..., settings = list(raw = FALSE)) 
         ))
     }
 
+    fields <- unique(fields)
+
     # Fetches the keyword arguments
     kwargs <- list(...)
 
