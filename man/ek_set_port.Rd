@@ -12,6 +12,7 @@ ek_set_port(port = NULL)
 }}
 }
 \description{
-Only needed if the Refinitiv Terminal is running on a port that
-is not between 9000L and 9011L
+Just needed to incase it doesn't work on the automatically detected port,
+this can sometimes be the case after the system hibernates with Eikon or
+the Refintiv terminal running.
 }

@@ -9,7 +9,8 @@ test_that("get_datagrid(), returns values for a correct Instrument and field", {
     skip_on_cran()
     skip_on_ci()
 
-    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+    load("test_data/app_key.RData")
+    ek_set_APIKEY(app_key)
 
     RIC_TSLA_MSFT <- data.frame(
       Instrument = c("88160R101", "594918104"),
@@ -28,7 +29,8 @@ test_that("get_datagrid(), returns values for a correct Instrument and field", {
 test_that("get_datagrid(), returns values for when one Instrument is faulty and field is correct", {
     skip_on_cran()
     skip_on_ci()
-    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+    load("test_data/app_key.RData")
+    ek_set_APIKEY(app_key)
 
     RIC_TSLA <- data.frame(
       Instrument = c('88160R101', '5949182324104'),
@@ -47,7 +49,8 @@ test_that("get_datagrid(), returns values for when one Instrument is faulty and 
 test_that("get_datagrid(), returns multiple rows for multiple fields", {
     skip_on_cran()
     skip_on_ci()
-    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+    load("test_data/app_key.RData")
+    ek_set_APIKEY(app_key)
 
     LOT_IPO <- data.frame(
       Instrument = c("AAPL.O", "TSLA.O"),
@@ -66,7 +69,8 @@ test_that("get_datagrid(), returns multiple rows for multiple fields", {
 test_that("get_datagrid(), accepts keyword arguments", {
     skip_on_cran()
     skip_on_ci()
-    ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
+    load("test_data/app_key.RData")
+    ek_set_APIKEY(app_key)
 
     test <- get_datagrid(
       instrument = c("MSFT.O", "IBM", "TSLA.O", "AAPL.O", "NFLX.O"),
@@ -86,23 +90,96 @@ test_that("get_datagrid(), accepts keyword arguments", {
 })
 
 
-# test_that("get_datgrid(), check is empty results somewhere is accepted", {
+# test_that("get_datgrid(), invalid APP_KEY", {
+#     # Could run on cran, but wouldn't be able to test the error
 #     skip_on_cran()
 #     skip_on_ci()
-#     ek_set_APIKEY('f63dab2c283546a187cd6c59894749a2228ce486')
-#
-#     testgd <<- get_datagrid(
-#       instrument = c('USDSB3L1Y=', "USDSB3L2Y="),
-#       fields = c('TR.BIDPRICE', 'TR.ASKPRICE', 'TR.CLOSEPRICE'),
-#       SDate = "2010-01-01",
-#       EDate = "2010-03-01",
-#       Frq = "D"
-#     )
-#
-#     expect_equal(ncol(df), 4)
-#     expect_equal(nrow(df), 81)
-#
+#     # load("test_data/app_key.RData")
+#     # ek_set_APIKEY(app_key)
+#     ek_set_APIKEY("INVALID_KEY")
+#     expect_error(get_datagrid("MSFT.O", "TR.TRESGScore"), "Error")
 #
 #     # Resetting to load time va
 #     .onLoad()
 # })
+
+
+test_that("get_datgrid(), passing date object", {
+    skip_on_cran()
+    skip_on_ci()
+    load("test_data/app_key.RData")
+    ek_set_APIKEY(app_key)
+
+    test <- get_datagrid(
+      instrument = c("MSFT.O", "IBM"),
+      fields = "TR.TRESGScore",
+      SDate = as.Date("2019-01-01"),
+      EDate = as.Date("2021-01-01")
+    )
+
+    expect_true(is.data.frame(test))
+
+    # Resetting to load time va
+    .onLoad()
+})
+
+
+test_that("get_datgrid(), something that is not a list to settings", {
+    load("test_data/app_key.RData")
+    ek_set_APIKEY(app_key)
+
+    expect_error(
+      get_datagrid(
+        instrument = "MSFT.O",
+        fields = "TR.TRESGScore",
+        SDate = as.Date("2019-01-01"),
+        EDate = as.Date("2021-01-01"),
+        settings = "something"
+      ),
+      "ValueError"
+    )
+
+    # Resetting to load time va
+    .onLoad()
+})
+
+
+test_that("get_datgrid(), tests if raw setting work", {
+    skip_on_cran()
+    skip_on_ci()
+    load("test_data/app_key.RData")
+    ek_set_APIKEY(app_key)
+
+    test <- get_datagrid(
+      instrument = c("MSFT.O", "IBM"),
+      fields = "TR.TRESGScore",
+      SDate = as.Date("2019-01-01"),
+      EDate = as.Date("2021-01-01"),
+      settings = list(raw = TRUE)
+    )
+
+    expect_true(!is.data.frame(test))
+
+    # Resetting to load time va
+    .onLoad()
+})
+
+
+test_that("get_datgrid(), tests if field_name setting work", {
+    skip_on_cran()
+    skip_on_ci()
+    load("test_data/app_key.RData")
+    ek_set_APIKEY(app_key)
+
+    test <- get_datagrid(
+      instrument = c("MSFT.O", "IBM"),
+      fields = "TR.CLOSE",
+      settings = list(field_name = TRUE)
+    )
+
+    test <- names(test)[2]
+    expect_equal(test, "TR.CLOSE")
+
+    # Resetting to load time va
+    .onLoad()
+})

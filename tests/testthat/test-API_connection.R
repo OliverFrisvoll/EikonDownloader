@@ -26,3 +26,4 @@ test_that("ek_get_APIKEY() finds port and sets API_KEY", {
     .onLoad()
 })
 
+

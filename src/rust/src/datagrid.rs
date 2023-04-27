@@ -161,8 +161,8 @@ fn fetch_headers(json_like: &Value, field_name: bool) -> Option<Vec<String>> {
     for value in headers {
         if field_name {
             let n = match value.get("field") {
-                None => value["displayName"].to_string(),
-                Some(r) => r.to_string()
+                None => clean_string(value["displayName"].to_string()),
+                Some(r) => clean_string(r.to_string())
             };
             names.push(n);
         } else {

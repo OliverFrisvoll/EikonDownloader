@@ -16,17 +16,11 @@ language.
 
 ## Installation
 
-You can install the development version of EikonDownloader from
-[GitHub](https://github.com/) with: Currently the only compiled version
-of the package is for Windows, but the source code can be downloaded and
-compiled for other operating systems.
+You can install the package from the r-universe:
 
 ``` r
 
-install.packages(
-  "https://github.com/OliverFrisvoll/EikonDownloader/releases/latest/download/EikonDownloader.zip",
-  repos = NULL
-)
+install.packages("EikonDownloader", repos = "https://oliverfrisvoll.r-universe.dev")
 ```
 
 To be able to use the tool there are a couple of things that needs to be

@@ -25,15 +25,10 @@ The goal of EikonDownloader is to allow the user to download timeseries and data
 
 ## Installation
 
-You can install the development version of EikonDownloader from [GitHub](https://github.com/) with:
-Currently the only compiled version of the package is for Windows, but the source code can be downloaded and compiled for other operating systems.
+You can install the package from the r-universe:
 ```{r, eval = FALSE}
 
-install.packages(
-  "https://github.com/OliverFrisvoll/EikonDownloader/releases/latest/download/EikonDownloader.zip",
-  repos = NULL,
-  binary = TRUE
-)
+install.packages("EikonDownloader", repos = "https://oliverfrisvoll.r-universe.dev")
 
 ```
 
