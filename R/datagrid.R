@@ -1,5 +1,8 @@
 #' Fetch datagrid information from the Eikon API
 #'
+#' Before this function words you need to run the function ek_app_key() with a working app_key from the Eikon/Refinitiv
+#' desktop
+#'
 #' This package downloads information from the Eikon datagrid. The function is a wrapper around the Rust
 #' function that does the actual work. To use this function you simply need to have an Eikon APP key, which you
 #' get from the Eikon desktop app or the newer Refinitiv terminal. The function will then fetch the information

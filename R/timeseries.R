@@ -4,10 +4,12 @@
 #' The fields can be specified, by default it returns all the fields
 #'
 #' @param rics - Char vector of rics for the information requested
-#' @param fields - Fields to return, can be found on Refinitiv Workspace
-#' @param startdate - Date, start date of the query
-#' @param enddate - Date, end date of the query
-#' @param interval - char, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly)
+#' @param fields - Fields to return, by default all fields are returned these field are different from the datagrid
+#' fields
+#' @param startdate - Date, start date of the query as a date object (required)
+#' @param enddate - Date, end date of the query as a date object (optional, if not supplied, todays date is used)
+#' @param interval - char, interval of data: (minute / hour / daily / weekly / monthly / quarterly / yearly) not all
+#' data is available for all intervals. For instance minute and hour data is only available one year back
 #'
 #' @return A dataframe with the data requested
 #'
