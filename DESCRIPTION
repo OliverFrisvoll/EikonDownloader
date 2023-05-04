@@ -1,6 +1,6 @@
 Package: EikonDownloader
 Title: Eikon API Downloader
-Version: 0.0.1.1105
+Version: 0.0.1.1107
 Authors@R: 
     person("Oliver Collargol", "Frisvoll", , "ocfris97@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0006-7923-576X"))
