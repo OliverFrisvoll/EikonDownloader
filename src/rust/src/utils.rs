@@ -22,6 +22,7 @@ pub enum EkError {
     ConnectionError(String),
     ThreadError(String),
     DateError(String),
+    HTTPError(String),
     Error(String),
 }
 
@@ -35,6 +36,7 @@ impl fmt::Display for EkError {
             EkError::ConnectionError(e) => write!(f, "Connection error: {}", e),
             EkError::ThreadError(e) => write!(f, "Thread error: {}", e),
             EkError::DateError(e) => write!(f, "Date error: {}", e),
+            EkError::HTTPError(e) => write!(f, "HTTP Error: {}", e),
             EkError::Error(e) => write!(f, "Error: {}", e)
         }
     }
@@ -174,6 +176,5 @@ mod tests {
 
         assert_eq!(res_df, attempt)
     }
-
 }
 

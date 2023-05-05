@@ -1,10 +1,10 @@
 use serde_json::{json, Value};
 use std::{fmt, thread, time};
-use std::future::Future;
+
 use tokio::runtime::Runtime;
 use tokio::task::{JoinHandle};
 use crate::utils::{EkError};
-use log::{info, error, debug, trace, warn};
+use log::{debug};
 
 #[derive(Copy, Clone)]
 pub enum Direction {
@@ -134,7 +134,7 @@ impl Connection {
     }
 
 
-    pub fn bearer(hk: Value) -> Result<String, EkError> {
+    fn bearer(hk: Value) -> Result<String, EkError> {
         match hk.get("access_token") {
             None => { Err(EkError::AuthError("Cannot get bearer access token".to_string())) }
             Some(r) => { Ok(format!("Bearer {}", r.to_string())) }
@@ -142,9 +142,9 @@ impl Connection {
     }
 
 
-    pub fn req_client(json_body: &Value, address: &str, app_key: &str, access_token: Option<&str>) -> reqwest::RequestBuilder {
+    fn req_client(json_body: &Value, address: &str, app_key: &str, access_token: Option<&str>) -> reqwest::RequestBuilder {
         let client = reqwest::Client::new();
-        let mut build = client.post(format!("{}/api/v1/data", address))
+        let build = client.post(format!("{}/api/v1/data", address))
             .header("CONTENT_TYPE", "application/json")
             .header("x-tr-applicationid", app_key)
             .json(json_body);
@@ -155,24 +155,30 @@ impl Connection {
         }
     }
 
-    pub fn entity_assembler(payload: &Value, direction: &Direction) -> Value {
+    fn entity_assembler(payload: &Value, direction: &Direction) -> Value {
         let dir = direction.to_string();
         json!({"Entity": {"E": dir,"W": payload}})
     }
 
-    pub async fn request_executioner(req: reqwest::RequestBuilder) -> Result<Value, EkError> {
-        return match req.send().await {
-            Ok(r) => {
-                match r.json::<Value>().await {
-                    Ok(r) => Ok(r),
-                    Err(e) => Err(EkError::NoData(e.to_string()))
-                }
-            }
-            Err(e) => Err(EkError::ConnectionError(e.to_string()))
+    async fn request_executioner(req: reqwest::RequestBuilder) -> Result<Option<Value>, EkError> {
+        let req_res = match req.send().await {
+            Ok(r) => r,
+            // Err(e) => return Err(EkError::ConnectionError(e.to_string()))
+            Err(e) => return Ok(None)
         };
+
+        // Catching non 200 status code
+        if !req_res.status().is_success() {
+            return Ok(None);
+        }
+
+        match req_res.json::<Value>().await {
+            Ok(r) => Ok(Some(r)),
+            Err(e) => Err(EkError::NoData(e.to_string()))
+        }
     }
 
-    pub async fn send_request_async(
+    async fn send_request_async(
         payload: Value,
         direction: Direction,
         address: String,
@@ -180,32 +186,43 @@ impl Connection {
         access_token: String,
     ) -> Result<Option<Value>, EkError> {
         let body = Connection::entity_assembler(&payload, &direction);
+        let mut trial = 0;
 
         loop {
+            trial += 1;
             let req: reqwest::RequestBuilder = Connection::req_client(&body, &address, &app_key, Some(&access_token));
+
             let json_res = match Connection::request_executioner(req).await {
                 Ok(r) => r,
                 Err(e) => return Err(e)
             };
 
+            let Some(req_res) = json_res else {
+                if trial < 5 {
+                    continue;
+                } else {
+                    return Ok(None);
+                }
+            };
+
             match direction {
                 Direction::Datagrid => {
-                    match json_res.get("responses") {
+                    match req_res.get("responses") {
                         Some(r) => {
                             match r[0].get("ticket") {
-                                None => return Ok(Some(json_res)),
+                                None => return Ok(Some(req_res)),
                                 Some(ticket) => { Connection::ticket_req(ticket, &direction, &address, &app_key); }
                             }
                         }
                         None => {
-                            match json_res.get("ErrorCode") {
+                            match req_res.get("ErrorCode") {
                                 None => return Ok(None),
                                 Some(ErrorCode) => {
                                     match ErrorCode.as_u64() {
-                                        None => return Err(EkError::Error(format!("Could not parse as Error Code as u64, {}: {}", ErrorCode, json_res["ErrorMessage"]))),
+                                        None => return Err(EkError::Error(format!("Could not parse as Error Code as u64, {}: {}", ErrorCode, req_res["ErrorMessage"]))),
                                         Some(e) => match e {
                                             2504u64 | 500u64 | 400u64 => {}
-                                            _ => return Err(EkError::Error(format!("{}: {}", ErrorCode, json_res["ErrorMessage"])))
+                                            _ => return Err(EkError::Error(format!("{}: {}", ErrorCode, req_res["ErrorMessage"])))
                                         }
                                     }
                                 }
@@ -213,16 +230,25 @@ impl Connection {
                         }
                     }
                 }
-                Direction::TimeSeries => return Ok(Some(json_res))
+                Direction::TimeSeries => return Ok(Some(req_res))
             }
         }
     }
 
-    pub async fn ticket_req(ticket: &Value, direction: &Direction, address: &str, app_key: &str) -> Result<Value, EkError> {
-        let payload = json!({"requests" : [{"ticket" : ticket}]});
-        let body = Connection::entity_assembler(&payload, &direction);
-        let req = Connection::req_client(&body, address, app_key, None);
-        Connection::request_executioner(req).await
+    async fn ticket_req(ticket: &Value, direction: &Direction, address: &str, app_key: &str) -> Result<Value, EkError> {
+        loop {
+            let payload = json!({"requests" : [{"ticket" : ticket}]});
+            let body = Connection::entity_assembler(&payload, &direction);
+            let req = Connection::req_client(&body, address, app_key, None);
+            let json_res = match Connection::request_executioner(req).await {
+                Ok(r) => r,
+                Err(e) => return Err(e)
+            };
+            match json_res {
+                None => continue,
+                Some(r) => return Ok(r)
+            }
+        }
     }
 }
 
