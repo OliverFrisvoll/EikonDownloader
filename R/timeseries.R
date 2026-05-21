@@ -30,13 +30,13 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate = NULL, interv
           "x" = "fields is not of type char"
         ))
     }
-    if (!lubridate::is.Date(startdate)) {
+    if (!inherits(startdate, "Date")) {
         cli::cli_abort(c(
           "ValueError",
           "x" = "startdate is not of type Date"
         ))
     }
-    if (!is.null(enddate) && !lubridate::is.Date(enddate)) {
+    if (!is.null(enddate) && !inherits(enddate, "Date")) {
         cli::cli_abort(c(
           "ValueError",
           "x" = "enddate is not of type Date"
@@ -54,13 +54,12 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate = NULL, interv
     # Changing interval to lowercase
     interval <- tolower(interval)
 
-    # 2020-01-01T00:00:00
     # Convert startdate to iso8601
-    startdate <- paste0(lubridate::format_ISO8601(startdate), "T00:00:00")
+    startdate <- paste0(format(startdate, "%Y-%m-%d"), "T00:00:00")
     if (is.null(enddate)) {
         enddate <- Sys.Date()
     }
-    enddate <- paste0(lubridate::format_ISO8601(enddate), "T00:00:00")
+    enddate <- paste0(format(enddate, "%Y-%m-%d"), "T00:00:00")
 
     api <- ek_get_APIKEY()
 
@@ -71,17 +70,20 @@ get_timeseries <- function(rics, fields = '*', startdate, enddate = NULL, interv
       startdate,
       enddate,
       api,
-      ek_get_port()
+      as.integer(ek_get_port())
     )
 
-    if (ret[1] == "Error") {
+    if (identical(ret[[1]], "Error")) {
         cli::cli_warn(c(
           "Error",
-          "x" = "{ret[2]}"
+          "x" = "{ret[[2]]}"
         ))
     } else if (length(names(ret)) > 0) {
-        # Would be better with a non dplyr solution, but here we are
-        dplyr::mutate(data.frame(ret), dplyr::across(where(is.character), ~dplyr::na_if(., "null")))
+        df <- as.data.frame(ret, stringsAsFactors = FALSE)
+        df[] <- lapply(df, function(x) {
+            if (is.character(x)) replace(x, x == "null", NA_character_) else x
+        })
+        df
     } else {
         ret
     }

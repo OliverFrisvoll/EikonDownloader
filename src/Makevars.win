@@ -3,7 +3,7 @@ TARGET = $(subst 64,x86_64,$(subst 32,i686,$(WIN)))-pc-windows-gnu
 TARGET_DIR = ./rust/target
 LIBDIR = $(TARGET_DIR)/$(TARGET)/release
 STATLIB = $(LIBDIR)/libEikonDownloader.a
-PKG_LIBS = -L$(LIBDIR) -lEikonDownloader -lws2_32 -ladvapi32 -luserenv -lbcrypt -lncrypt -lcrypt32 -lntdll -lsecur32
+PKG_LIBS = -L$(LIBDIR) -lEikonDownloader -lws2_32 -ladvapi32 -luserenv -lbcrypt -lncrypt -lcrypt32 -lntdll -lsecur32 -lole32
 
 all: C_clean
 

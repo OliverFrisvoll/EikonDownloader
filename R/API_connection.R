@@ -64,15 +64,16 @@ ek_get_port <- function() {
 #'
 #' @param port - The port to check status on
 ek_get_status <- function(port) {
-    address <- paste0(.pkgglobalenv$ek$base_url, ":", port, "/api/status")
-    status <- tryCatch({
-        httr::http_status(httr::GET(address))$reason == "OK"
+    address <- paste0("http://127.0.0.1:", port, "/api/status")
+    tryCatch({
+        req <- httr2::request(address)
+        resp <- httr2::req_perform(req)
+        httr2::resp_status(resp) == 200L
     },
       error = function(cond) {
           FALSE
       }
     )
-    status
 }
 
 
@@ -126,7 +127,7 @@ ek_fetch_port <- function(debug = FALSE) {
 
 
         if (file.exists(port_in_use_file)) {
-            port_str <- readr::read_file(port_in_use_file)
+            port_str <- trimws(paste(readLines(port_in_use_file, warn = FALSE), collapse = ""))
             if (port_str != "") {
                 port <- as.integer(port_str)
                 if (debug) {
