@@ -1,21 +1,17 @@
-use std::any::TypeId;
+#![allow(non_snake_case)]
+
 use crate::connection::Connection;
 use crate::datagrid::Datagrid;
-use crate::timeseries::{TimeSeries, Interval};
+use crate::timeseries::{Interval, TimeSeries};
 use crate::utils::{EkError, EkResults, field_builder, Fields};
+use chrono::prelude::*;
 use extendr_api::prelude::*;
 use std::collections::HashMap;
-use extendr_api::wrapper::list::{List};
-use polars::prelude::*;
-use chrono::prelude::*;
-use std::result::Result;
-use extendr_api::ToVectorValue;
 
 mod connection;
 mod datagrid;
-mod utils;
 mod timeseries;
-
+mod utils;
 
 #[extendr]
 fn rust_get_dg(
@@ -24,28 +20,18 @@ fn rust_get_dg(
     param: List,
     settings: List,
     api: String,
-    port: i16,
-) -> List {
-    let mut con = Connection::new(api, "127.0.0.1".to_string(), port);
+    port: i32,
+) -> Robj {
+    let con = Connection::new(api, "127.0.0.1".to_string(), port as i16);
     let dg = Datagrid::new(con);
-    let params = list_to_hm_string(param);
-    let settings = list_to_hm_bool(settings);
-    let fields = field_builder(Fields::NoParams(fields));
+    let params = list_to_hm_string(&param);
+    let settings_map = list_to_hm_bool(&settings);
+    let fields_json = field_builder(Fields::NoParams(fields));
 
-    match dg.get_datagrid(
-        instruments,
-        fields,
-        Some(params),
-        settings,
-    ) {
-        EkResults::DF(df) => {
-            match polars_to_r(df) {
-                Ok(r) => r,
-                Err(e) => List::from_values(vec!["Error".to_string(), e.to_string()])
-            }
-        }
-        EkResults::Raw(r) => List::from_values(Value_String(r)),
-        EkResults::Err(e) => List::from_values(vec!["Error".to_string(), e.to_string()])
+    match dg.get_datagrid(instruments, fields_json, Some(params), settings_map) {
+        EkResults::Columns { names, columns } => columns_to_r_list(&names, columns),
+        EkResults::Raw(r) => value_strings(r).into_robj(),
+        EkResults::Err(e) => vec!["Error".to_string(), e.to_string()].into_robj(),
     }
 }
 
@@ -57,18 +43,22 @@ fn rust_get_ts(
     Start_Date: &str,
     End_Date: &str,
     api: String,
-    port: i16,
-) -> List {
-    let mut con = Connection::new(api, "127.0.0.1".to_string(), port);
+    port: i32,
+) -> Robj {
+    let con = Connection::new(api, "127.0.0.1".to_string(), port as i16);
     let ts = TimeSeries::new(con);
 
-    let SDate = NaiveDateTime::parse_from_str(Start_Date, "%FT%T")
-        .unwrap();
+    let s_date = match NaiveDateTime::parse_from_str(Start_Date, "%FT%T") {
+        Ok(d) => d,
+        Err(e) => return vec!["Error".to_string(), format!("Cannot parse start_date: {e}")].into_robj(),
+    };
 
-    let EDate = NaiveDateTime::parse_from_str(End_Date, "%FT%T")
-        .unwrap();
+    let e_date = match NaiveDateTime::parse_from_str(End_Date, "%FT%T") {
+        Ok(d) => d,
+        Err(e) => return vec!["Error".to_string(), format!("Cannot parse end_date: {e}")].into_robj(),
+    };
 
-    let Frq = match Frq {
+    let interval = match Frq {
         "minute" => Interval::Minute,
         "hour" => Interval::Hour,
         "daily" => Interval::Daily,
@@ -79,83 +69,60 @@ fn rust_get_ts(
         _ => Interval::Daily,
     };
 
-    match ts.get_timeseries(
-        rics,
-        fields,
-        Frq,
-        SDate,
-        EDate,
-    ) {
-        EkResults::DF(df) => {
-            match polars_to_r(df) {
-                Ok(r) => r,
-                Err(e) => List::from_values(vec!["Error".to_string(), e.to_string()])
-            }
-        }
-        EkResults::Raw(r) => List::from_values(Value_String(r)),
-        EkResults::Err(e) => List::from_values(vec!["Error".to_string(), e.to_string()])
+    match ts.get_timeseries(rics, fields, interval, s_date, e_date) {
+        EkResults::Columns { names, columns } => columns_to_r_list(&names, columns),
+        EkResults::Raw(r) => value_strings(r).into_robj(),
+        EkResults::Err(e) => vec!["Error".to_string(), e.to_string()].into_robj(),
     }
 }
 
-fn list_to_hm_string(l: List) -> HashMap<String, String> {
+fn list_to_hm_string(l: &List) -> HashMap<String, String> {
     let mut params: HashMap<String, String> = HashMap::new();
-    for (key, value) in List::into_hashmap(l).iter() {
-        params.insert(key.to_string(), value.as_str().unwrap().to_string());
+    for (key, value) in l.iter() {
+        if let Some(s) = value.as_str() {
+            params.insert(key.to_string(), s.to_string());
+        }
     }
     params
 }
 
-fn list_to_hm_bool(l: List) -> HashMap<String, bool> {
+fn list_to_hm_bool(l: &List) -> HashMap<String, bool> {
     let mut params: HashMap<String, bool> = HashMap::new();
-    for (key, value) in List::into_hashmap(l).iter() {
-        params.insert(key.to_string(), value.as_bool().unwrap());
+    for (key, value) in l.iter() {
+        if let Some(b) = value.as_bool() {
+            params.insert(key.to_string(), b);
+        }
     }
     params
 }
 
-fn series_to_r(s: &Series) -> PolarsResult<Robj> {
-    match s.dtype() {
-        DataType::Float64 => s.f64().map(|ca| ca.into_iter().collect_robj()),
-        DataType::Utf8 => s.utf8().map(|ca| ca.into_iter().collect_robj()),
-        _ => Err(PolarsError::NoData(polars::error::ErrString::from("Could not convert series to R object")))
+/// Convert columnar data into a named R list (data.frame-compatible)
+fn columns_to_r_list(names: &[String], columns: Vec<Vec<Option<String>>>) -> Robj {
+    let values: Vec<Robj> = columns
+        .into_iter()
+        .map(|col| {
+            let strs: Strings = col
+                .into_iter()
+                .map(|v| match v {
+                    Some(s) => Rstr::from(s),
+                    None => Rstr::na(),
+                })
+                .collect();
+            strs.into_robj()
+        })
+        .collect();
+
+    let name_strs: Vec<&str> = names.iter().map(|s| s.as_str()).collect();
+    match List::from_names_and_values(name_strs, values) {
+        Ok(list) => list.into_robj(),
+        Err(_) => vec!["Error".to_string(), "Could not build named list".to_string()].into_robj(),
     }
 }
 
-fn polars_to_r(df: DataFrame) -> Result<List, EkError> {
-    let mut names = Vec::new();
-    let mut values = Vec::new();
-
-    for ser in df.iter() {
-        names.push(ser.name());
-        values.push(match series_to_r(&ser) {
-            Ok(r) => r,
-            Err(e) => return Err(EkError::Error("Could not convert series to R object".to_string()))
-        });
-    }
-
-    let mut res = List::from_values(values);
-    match res.as_robj_mut()
-        .set_names(names) {
-        Err(e) => Err(EkError::Error("Could not set names of dataframe".to_string())),
-        Ok(r) => match r.as_list() {
-            None => Err(EkError::Error("Could not set names of dataframe".to_string())),
-            Some(r) => Ok(r)
-        },
-    }
+fn value_strings(v: Vec<serde_json::Value>) -> Vec<String> {
+    v.into_iter().map(|row| row.to_string()).collect()
 }
 
-fn Value_String(v: Vec<serde_json::Value>) -> Vec<String> {
-    let mut res = Vec::with_capacity(v.capacity());
-    for row in v {
-        res.push(row.to_string())
-    }
-    res
-}
-
-
-// Macro to generate exports.
-// This ensures exported functions are registered with R.
-// See corresponding C code in `entrypoint.c`.
 extendr_module! {
     mod EikonDownloader;
     fn rust_get_dg;
